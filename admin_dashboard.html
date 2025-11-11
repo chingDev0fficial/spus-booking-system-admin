@@ -1,0 +1,2916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Booking System - Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            padding: 20px;
+            color: white;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #ecf0f1;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(52, 152, 219, 0.2);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            padding: 12px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* Filters */
+        .filters-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.blue::before { background: #3498db; }
+        .stat-card.green::before { background: #27ae60; }
+        .stat-card.orange::before { background: #f39c12; }
+        .stat-card.red::before { background: #e74c3c; }
+        .stat-card.purple::before { background: #9b59b6; }
+        .stat-card.teal::before { background: #1abc9c; }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card.blue .stat-icon { background: rgba(52, 152, 219, 0.1); color: #3498db; }
+        .stat-card.green .stat-icon { background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+        .stat-card.orange .stat-icon { background: rgba(243, 156, 18, 0.1); color: #f39c12; }
+        .stat-card.red .stat-icon { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+        .stat-card.purple .stat-icon { background: rgba(155, 89, 182, 0.1); color: #9b59b6; }
+        .stat-card.teal .stat-icon { background: rgba(26, 188, 156, 0.1); color: #1abc9c; }
+
+        .stat-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stat-change.positive {
+            color: #27ae60;
+        }
+
+        .stat-change.negative {
+            color: #e74c3c;
+        }
+
+        /* Charts */
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .chart-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .chart-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .chart-header p {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Table */
+        .table-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .table-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 8px 35px 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 250px;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* Export Button */
+        .export-btn {
+            padding: 8px 16px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            background: #229954;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filters-row {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Status Indicator */
+        #status-indicator {
+            animation: pulse 2s infinite;
+        }
+
+        #status-indicator.paused {
+            animation: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>SPUS Library</h2>
+            <p>Admin Dashboard</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" data-section="overview">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-section="bookings">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>All Bookings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-section="libraries">
+                    <i class="fas fa-building"></i>
+                    <span>Libraries Report</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-section="monthly">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Monthly Report</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-section="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-section="users">
+                    <i class="fas fa-users"></i>
+                    <span>User Statistics</span>
+                </a>
+            </li>
+        </ul>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1 id="section-title">Dashboard Overview</h1>
+                <p id="section-subtitle">Monitor your library booking system</p>
+                <p style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                    <i class="fas fa-circle" id="status-indicator" style="color: #27ae60; font-size: 8px;"></i>
+                    <span id="last-update">Last updated: Never</span>
+                    <span style="margin-left: 10px;">Auto-refresh: <strong id="auto-refresh-status">ON</strong></span>
+                </p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleAutoRefresh()" style="margin-right: 10px;" id="toggle-refresh-btn">
+                    <i class="fas fa-pause"></i>
+                    Pause
+                </button>
+                <button class="btn btn-secondary" onclick="refreshData()" style="margin-right: 10px;" id="manual-refresh-btn">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+                <button class="export-btn" onclick="exportReport()">
+                    <i class="fas fa-download"></i>
+                    Export Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label>Library</label>
+                    <select id="filterLibrary" onchange="applyFilters()">
+                        <option value="">All Libraries</option>
+                        <!-- Options will be populated dynamically from API -->
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <select id="filterDateRange" onchange="applyFilters()">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month" selected>This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filterStatus" onchange="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Booker Type</label>
+                    <select id="filterBookerType" onchange="applyFilters()">
+                        <option value="">All Types</option>
+                        <option value="student">Student</option>
+                        <option value="faculty officers">Faculty Officers</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn btn-secondary" onclick="resetFilters()">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading dashboard data...</p>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content">
+        
+        <!-- Overview Section -->
+        <div id="section-overview" class="dashboard-section">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-label">Total Bookings</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-change positive" id="stat-total-change">
+                        <i class="fas fa-arrow-up"></i> 0% from last month
+                    </div>
+                </div>
+
+                <div class="stat-card green">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-label">Approved</div>
+                    <div class="stat-value" id="stat-approved">0</div>
+                    <div class="stat-change positive" id="stat-approved-change">
+                        <i class="fas fa-arrow-up"></i> 0% approval rate
+                    </div>
+                </div>
+
+                <div class="stat-card orange">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="stat-pending">0</div>
+                    <div class="stat-change" id="stat-pending-change">
+                        Awaiting review
+                    </div>
+                </div>
+
+                <div class="stat-card red">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-label">Rejected</div>
+                    <div class="stat-value" id="stat-rejected">0</div>
+                    <div class="stat-change negative" id="stat-rejected-change">
+                        <i class="fas fa-arrow-down"></i> 0% rejection rate
+                    </div>
+                </div>
+
+                <div class="stat-card purple">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="stat-users">0</div>
+                    <div class="stat-change" id="stat-users-change">
+                        Unique bookers
+                    </div>
+                </div>
+
+                <div class="stat-card teal">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-label">Total Hours Booked</div>
+                    <div class="stat-value" id="stat-hours">0</div>
+                    <div class="stat-change" id="stat-hours-change">
+                        Avg 0 hrs/booking
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Bookings Trend</h3>
+                        <p>Daily bookings over time</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="bookingsTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Status Distribution</h3>
+                        <p>Breakdown by booking status</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Library Usage</h3>
+                        <p>Bookings per library</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="libraryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Peak Hours</h3>
+                        <p>Most popular booking times</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="peakHoursChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 3 -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Booker Types</h3>
+                        <p>Distribution by user type</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="bookerTypeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Monthly Comparison</h3>
+                        <p>Bookings by month</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Recent Bookings</h3>
+                    <div class="table-actions">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search bookings..." onkeyup="searchBookings()">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="bookingsTable">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Booking Name</th>
+                                <th>Type</th>
+                                <th>Library</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- End Overview Section -->
+        
+        <!-- All Bookings Section -->
+        <div id="section-bookings" class="dashboard-section" style="display: none;">
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>All Bookings Management</h3>
+                    <div class="table-actions">
+                        <div class="search-box">
+                            <input type="text" id="searchInputAll" placeholder="Search all bookings..." onkeyup="searchAllBookings()">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Reference</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Email</th>
+                                <th>Library</th>
+                                <th>Facility</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allBookingsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination" style="text-align: center; margin-top: 20px;">
+                    <!-- Pagination will be added here -->
+                </div>
+            </div>
+        </div>
+        <!-- End All Bookings Section -->
+        
+        <!-- Libraries Report Section -->
+        <div id="section-libraries" class="dashboard-section" style="display: none;">
+            <div class="stats-grid" id="libraryStatsGrid">
+                <!-- Library-specific stats will be loaded here -->
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Library Comparison</h3>
+                        <p>Bookings across all libraries</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="libraryComparisonChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Library Utilization Rate</h3>
+                        <p>Percentage of usage</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="libraryUtilizationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Library Details</h3>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Library</th>
+                                <th>Total Bookings</th>
+                                <th>Pending</th>
+                                <th>Approved</th>
+                                <th>Total Hours</th>
+                                <th>Avg Hours/Booking</th>
+                                <th>Most Used Facility</th>
+                            </tr>
+                        </thead>
+                        <tbody id="libraryDetailsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- End Libraries Report Section -->
+        
+        <!-- Monthly Report Section -->
+        <div id="section-monthly" class="dashboard-section" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+                    <div class="stat-label">This Month</div>
+                    <div class="stat-value" id="stat-this-month">0</div>
+                    <div class="stat-change" id="stat-this-month-change"></div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
+                    <div class="stat-label">Last Month</div>
+                    <div class="stat-value" id="stat-last-month">0</div>
+                    <div class="stat-change" id="stat-last-month-change"></div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-label">Growth Rate</div>
+                    <div class="stat-value" id="stat-growth-rate">0%</div>
+                    <div class="stat-change" id="stat-growth-rate-change"></div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-label">Best Month</div>
+                    <div class="stat-value" id="stat-best-month">-</div>
+                    <div class="stat-change" id="stat-best-month-change"></div>
+                </div>
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <h3>Monthly Bookings Trend</h3>
+                        <p>Last 12 months comparison</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Month-over-Month Status</h3>
+                        <p>Status breakdown by month</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyStatusChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Monthly User Types</h3>
+                        <p>Student vs Faculty trend</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyUserTypeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Monthly Report Section -->
+        
+        <!-- Analytics Section -->
+        <div id="section-analytics" class="dashboard-section" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-label">Avg Booking Duration</div>
+                    <div class="stat-value" id="stat-avg-duration">0</div>
+                    <div class="stat-change">hours per booking</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stat-label">Peak Hour</div>
+                    <div class="stat-value" id="stat-peak-hour">-</div>
+                    <div class="stat-change">most popular time</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div class="stat-label">Top Library</div>
+                    <div class="stat-value" id="stat-top-library">-</div>
+                    <div class="stat-change">most booked</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+                    <div class="stat-label">Top Booker Type</div>
+                    <div class="stat-value" id="stat-top-booker">-</div>
+                    <div class="stat-change">most active</div>
+                </div>
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Booking Duration Distribution</h3>
+                        <p>Hours distribution</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="durationDistributionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Day of Week Analysis</h3>
+                        <p>Busiest days</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dayOfWeekChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Hourly Heatmap</h3>
+                        <p>Booking patterns by hour</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="hourlyHeatmapChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Purpose Analysis</h3>
+                        <p>Top 10 booking purposes</p>
+                    </div>
+                    <div class="chart-container" style="max-height: 300px; overflow-y: auto;">
+                        <div id="purposeAnalysisList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Analytics Section -->
+        
+        <!-- User Statistics Section -->
+        <div id="section-users" class="dashboard-section" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="stat-total-users">0</div>
+                    <div class="stat-change">unique bookers</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-label">Students</div>
+                    <div class="stat-value" id="stat-students">0</div>
+                    <div class="stat-change" id="stat-students-change"></div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <div class="stat-label">Faculty Officers</div>
+                    <div class="stat-value" id="stat-faculty">0</div>
+                    <div class="stat-change" id="stat-faculty-change"></div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fas fa-crown"></i></div>
+                    <div class="stat-label">Top User</div>
+                    <div class="stat-value" id="stat-top-user" style="font-size: 18px;">-</div>
+                    <div class="stat-change" id="stat-top-user-bookings"></div>
+                </div>
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Top 10 Most Active Users</h3>
+                        <p>Users with most bookings</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="topUsersChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>User Type Distribution</h3>
+                        <p>Students vs Faculty</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="userTypeDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>User Details</h3>
+                    <div class="table-actions">
+                        <div class="search-box">
+                            <input type="text" id="searchUsers" placeholder="Search users..." onkeyup="searchUsers()">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Total Bookings</th>
+                                <th>Pending</th>
+                                <th>Approved</th>
+                                <th>Total Hours</th>
+                                <th>Last Booking</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userDetailsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- End User Statistics Section -->
+        
+        </div>
+    </main>
+
+    <script>
+        // API Configuration
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxdkklPteUg-U0YP0YPorOU6cwTKnMGuNj9TW-BD9mw1BYVecwG96inpf29GZ4zo-dK/exec';
+        const libraryAPI = "https://script.google.com/macros/s/AKfycbzCaWbdybQRv1bC_dGP_8kQdEsaIK8WlxZArQwGue1dX2rw0Mus0HDVTC5BuziwJhmveg/exec";
+        const facilityAPI = "https://script.google.com/macros/s/AKfycbzGMYKtuKrYu6IzYHoAfA46domoRl6MjCNgUDJtrT2OFjHnfo0eB5TVmtk3jUEqJ0UWFQ/exec";
+
+        // Global variables
+        let allBookings = [];
+        let filteredBookings = [];
+        let charts = {};
+        let libraries = {};
+        let facilities = {};
+        let currentSection = 'overview';
+        let autoRefreshInterval = null;
+        let lastUpdateTime = null;
+        let isAutoRefreshEnabled = false;
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeDashboard();
+            setupNavigation();
+            
+            // Set initial update time
+            lastUpdateTime = new Date();
+            updateLastUpdateDisplay();
+            
+            // Start auto-refresh
+            startAutoRefresh();
+            
+            // Update "last updated" display every 30 seconds
+            setInterval(updateLastUpdateDisplay, 30000);
+        });
+
+        // Initialize Dashboard - Load all data
+        async function initializeDashboard() {
+            showLoading(true);
+            
+            try {
+                // Load libraries and facilities first
+                await Promise.all([
+                    loadLibraries(),
+                    loadFacilities()
+                ]);
+                
+                // Then load bookings
+                await loadDashboardData();
+                
+                // Populate library filter dropdown
+                populateLibraryFilter();
+                
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showError('Error loading dashboard. Please refresh the page.');
+                showLoading(false);
+            }
+        }
+
+        // Load Libraries
+        async function loadLibraries() {
+            try {
+                const response = await fetch(libraryAPI);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch libraries');
+                }
+                
+                const data = await response.json();
+                console.log('Libraries API Response:', data);
+                
+                let librariesData = [];
+                if (data.status === 'success' && data.data) {
+                    librariesData = Array.isArray(data.data) ? data.data : [data.data];
+                } else if (Array.isArray(data)) {
+                    librariesData = data;
+                }
+                
+                // Create library lookup object
+                libraries = {};
+                librariesData.forEach(lib => {
+                    const id = lib.id || lib.library_id;
+                    const name = lib.name || lib.library_name;
+                    if (id && name) {
+                        libraries[id] = name;
+                    }
+                });
+                
+                console.log('Libraries loaded:', libraries);
+                
+            } catch (error) {
+                console.error('Error loading libraries:', error);
+                // Continue even if libraries fail to load
+            }
+        }
+
+        // Load Facilities
+        async function loadFacilities() {
+            try {
+                const response = await fetch(facilityAPI);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch facilities');
+                }
+                
+                const data = await response.json();
+                console.log('Facilities API Response:', data);
+                
+                let facilitiesData = [];
+                if (data.status === 'success' && data.data) {
+                    facilitiesData = Array.isArray(data.data) ? data.data : [data.data];
+                } else if (Array.isArray(data)) {
+                    facilitiesData = data;
+                }
+                
+                // Create facility lookup object
+                facilities = {};
+                facilitiesData.forEach(fac => {
+                    const id = fac.id || fac.facility_id;
+                    const name = fac.name || fac.facility_name;
+                    if (id && name) {
+                        facilities[id] = name;
+                    }
+                });
+                
+                console.log('Facilities loaded:', facilities);
+                
+            } catch (error) {
+                console.error('Error loading facilities:', error);
+                // Continue even if facilities fail to load
+            }
+        }
+
+        // Populate Library Filter Dropdown
+        function populateLibraryFilter() {
+            const filterLibrary = document.getElementById('filterLibrary');
+            
+            // Clear existing options except "All Libraries"
+            filterLibrary.innerHTML = '<option value="">All Libraries</option>';
+            
+            // Add libraries from loaded data
+            Object.keys(libraries).sort().forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = libraries[id];
+                filterLibrary.appendChild(option);
+            });
+        }
+
+        // Get Library Name
+        function getLibraryName(libraryId) {
+            if (!libraryId) return 'N/A';
+            return libraries[libraryId] || `Library ${libraryId}`;
+        }
+
+        // Get Facility Name
+        function getFacilityName(facilityId) {
+            if (!facilityId) return 'N/A';
+            return facilities[facilityId] || `Facility ${facilityId}`;
+        }
+
+        // Format Time to Human Readable Format
+        function formatTime(timeString) {
+            if (!timeString) return 'N/A';
+            
+            try {
+                // Check if it's already a time format with AM/PM
+                if (typeof timeString === 'string') {
+                    // If already has AM/PM (e.g., "8:00:00 AM" or "8:00 AM")
+                    if (/AM|PM/i.test(timeString)) {
+                        // Remove seconds if present (8:00:00 AM -> 8:00 AM)
+                        return timeString.replace(/(\d{1,2}):(\d{2}):\d{2}\s*(AM|PM)/i, '$1:$2 $3');
+                    }
+                    
+                    // Match simple time format HH:MM
+                    if (/^\d{1,2}:\d{2}$/.test(timeString)) {
+                        const [hoursStr, minutesStr] = timeString.split(':');
+                        let hours = parseInt(hoursStr, 10);
+                        const minutes = parseInt(minutesStr, 10);
+                        
+                        // Convert to 12-hour format
+                        const period = hours >= 12 ? 'PM' : 'AM';
+                        hours = hours % 12;
+                        hours = hours ? hours : 12; // Convert 0 to 12
+                        
+                        // Format minutes with leading zero
+                        const minutesFormatted = minutes.toString().padStart(2, '0');
+                        
+                        return `${hours}:${minutesFormatted} ${period}`;
+                    }
+                }
+                
+                // Handle ISO date format (1899-12-30T01:04:35.000Z)
+                // This is Excel's serial date format being exported as ISO
+                if (typeof timeString === 'string' && timeString.includes('T') && timeString.includes('Z')) {
+                    const date = new Date(timeString);
+                    
+                    // Check if date is valid
+                    if (isNaN(date.getTime())) {
+                        return timeString;
+                    }
+                    
+                    // For Excel time-only values (1899-12-30), extract the time portion
+                    // Use local hours instead of UTC since Excel stores time as local
+                    let hours = date.getUTCHours() + 8; // Adjust for Philippine timezone (UTC+8)
+                    if (hours >= 24) hours -= 24;
+                    const minutes = date.getUTCMinutes();
+                    
+                    // Convert to 12-hour format
+                    const period = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // Convert 0 to 12
+                    
+                    // Format minutes with leading zero
+                    const minutesStr = minutes.toString().padStart(2, '0');
+                    
+                    return `${hours}:${minutesStr} ${period}`;
+                }
+                
+                return timeString;
+            } catch (error) {
+                console.error('Error formatting time:', error);
+                return timeString;
+            }
+        }
+
+        // Load Dashboard Data from Google Sheets API
+        async function loadDashboardData() {
+            try {
+                // Fetch bookings from Google Sheets
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch bookings');
+                }
+                
+                const data = await response.json();
+                
+                console.log('API Response:', data); // Debug log
+                
+                // Handle different response formats
+                let bookingsData = [];
+                
+                if (data.status === 'success' && data.data) {
+                    // Format 1: {status: 'success', data: [...]}
+                    bookingsData = Array.isArray(data.data) ? data.data : [data.data];
+                } else if (Array.isArray(data)) {
+                    // Format 2: Direct array
+                    bookingsData = data;
+                } else if (data.bookings && Array.isArray(data.bookings)) {
+                    // Format 3: {bookings: [...]}
+                    bookingsData = data.bookings;
+                } else {
+                    console.error('Unexpected data format:', data);
+                    showError('Invalid data format received from server');
+                    showLoading(false);
+                    return;
+                }
+                
+                // Transform data to ensure consistent property names
+                allBookings = bookingsData.map(booking => ({
+                    id: booking.id || booking.ID,
+                    booked_reference: booking.booked_reference || booking.booking_reference,
+                    booking_name: booking.booking_name,
+                    booker_type: booking.booker_type,
+                    email: booking.email,
+                    num_users: booking.num_users,
+                    name_users: booking.name_users,
+                    subject_topic_purpose: booking.subject_topic_purpose,
+                    teacher_coordinator: booking.teacher_coordinator,
+                    library: booking.library,
+                    facility: booking.facility,
+                    date: booking.date,
+                    start_time: booking.start_time,
+                    end_time: booking.end_time,
+                    status: booking.status || 'Pending',
+                    in: booking.in,
+                    timestamp: booking.timestamp,
+                    booked_hour: booking.booked_hour || booking.hour || 0
+                }));
+                
+                console.log('Processed bookings:', allBookings); // Debug log
+                console.log('Total bookings loaded:', allBookings.length); // Debug log
+                
+                filteredBookings = [...allBookings];
+                
+                // Update dashboard with real data
+                updateStats();
+                initializeCharts();
+                populateBookingsTable();
+                
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Error connecting to the server. Please refresh the page.');
+                showLoading(false);
+            }
+        }
+
+        // Auto-Refresh Functions
+        function startAutoRefresh() {
+            // Clear any existing interval
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            isAutoRefreshEnabled = true;
+            
+            // Auto-refresh every 30 seconds
+            autoRefreshInterval = setInterval(async () => {
+                console.log('Auto-refreshing data...');
+                
+                // Update status indicator to show refreshing
+                const statusIndicator = document.getElementById('status-indicator');
+                if (statusIndicator) {
+                    statusIndicator.style.color = '#f39c12'; // Orange while loading
+                }
+                
+                await loadDashboardData();
+                await loadLibraries();
+                await loadFacilities();
+                
+                // Update last update time
+                lastUpdateTime = new Date();
+                updateLastUpdateDisplay();
+                
+                // Reset status indicator to green
+                if (statusIndicator) {
+                    statusIndicator.style.color = '#27ae60'; // Green when done
+                }
+                
+            }, 30000); // 30 seconds
+            
+            // Update UI
+            updateAutoRefreshUI();
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            
+            isAutoRefreshEnabled = false;
+            
+            // Update UI
+            updateAutoRefreshUI();
+            
+            // Update status indicator
+            const statusIndicator = document.getElementById('status-indicator');
+            if (statusIndicator) {
+                statusIndicator.style.color = '#95a5a6'; // Gray when paused
+            }
+        }
+
+        function toggleAutoRefresh() {
+            if (isAutoRefreshEnabled) {
+                stopAutoRefresh();
+            } else {
+                startAutoRefresh();
+            }
+        }
+
+        function updateAutoRefreshUI() {
+            const statusText = document.getElementById('auto-refresh-status');
+            const toggleBtn = document.getElementById('toggle-refresh-btn');
+            
+            if (statusText) {
+                statusText.textContent = isAutoRefreshEnabled ? 'ON' : 'OFF';
+                statusText.style.color = isAutoRefreshEnabled ? '#27ae60' : '#e74c3c';
+            }
+            
+            if (toggleBtn) {
+                toggleBtn.innerHTML = isAutoRefreshEnabled 
+                    ? '<i class="fas fa-pause"></i> Pause' 
+                    : '<i class="fas fa-play"></i> Resume';
+            }
+        }
+
+        function updateLastUpdateDisplay() {
+            const lastUpdateElement = document.getElementById('last-update');
+            
+            if (lastUpdateElement && lastUpdateTime) {
+                const now = new Date();
+                const diffSeconds = Math.floor((now - lastUpdateTime) / 1000);
+                
+                let timeText;
+                if (diffSeconds < 60) {
+                    timeText = 'Just now';
+                } else if (diffSeconds < 3600) {
+                    const minutes = Math.floor(diffSeconds / 60);
+                    timeText = `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+                } else {
+                    const hours = Math.floor(diffSeconds / 3600);
+                    timeText = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                }
+                
+                lastUpdateElement.textContent = `Last updated: ${timeText}`;
+            }
+        }
+
+        // Manual Refresh Function
+        async function refreshData() {
+            console.log('Manual refresh triggered');
+            
+            // Disable button during refresh
+            const manualRefreshBtn = document.getElementById('manual-refresh-btn');
+            if (manualRefreshBtn) {
+                manualRefreshBtn.disabled = true;
+                manualRefreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            }
+            
+            // Update status indicator
+            const statusIndicator = document.getElementById('status-indicator');
+            if (statusIndicator) {
+                statusIndicator.style.color = '#f39c12'; // Orange while loading
+            }
+            
+            try {
+                await loadDashboardData();
+                await loadLibraries();
+                await loadFacilities();
+                
+                // Update last update time
+                lastUpdateTime = new Date();
+                updateLastUpdateDisplay();
+                
+                // Show success indicator
+                if (statusIndicator) {
+                    statusIndicator.style.color = '#27ae60'; // Green when done
+                }
+                
+                // Show success message
+                showSuccess('Dashboard refreshed successfully!');
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showError('Error refreshing data. Please try again.');
+                
+                if (statusIndicator) {
+                    statusIndicator.style.color = '#e74c3c'; // Red on error
+                }
+            } finally {
+                // Re-enable button
+                if (manualRefreshBtn) {
+                    manualRefreshBtn.disabled = false;
+                    manualRefreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                }
+            }
+        }
+
+        // Show Success Message
+        function showSuccess(message) {
+            const existingSuccess = document.getElementById('success-message');
+            if (existingSuccess) {
+                existingSuccess.remove();
+            }
+            
+            const successDiv = document.createElement('div');
+            successDiv.id = 'success-message';
+            successDiv.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: #27ae60;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            successDiv.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <strong style="margin-left: 10px;">${message}</strong>
+            `;
+            
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => successDiv.remove(), 300);
+            }, 3000);
+        }
+
+        // Show error message
+        function showError(message) {
+            const dashboardContent = document.getElementById('dashboard-content');
+            dashboardContent.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 64px; color: #e74c3c; margin-bottom: 20px;"></i>
+                    <h3 style="color: #555; margin-bottom: 10px;">Error Loading Data</h3>
+                    <p style="color: #777;">${message}</p>
+                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 20px;">
+                        <i class="fas fa-refresh"></i> Reload Page
+                    </button>
+                </div>
+            `;
+        }
+
+        // Show/Hide Loading
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('dashboard-content').style.display = show ? 'none' : 'block';
+        }
+
+        // Update Statistics
+        function updateStats() {
+            const total = filteredBookings.length;
+            const approved = filteredBookings.filter(b => b.status && b.status.toLowerCase() === 'approved').length;
+            const pending = filteredBookings.filter(b => !b.status || b.status.toLowerCase() === 'pending').length;
+            const rejected = filteredBookings.filter(b => b.status && b.status.toLowerCase() === 'rejected').length;
+            const completed = filteredBookings.filter(b => b.status && b.status.toLowerCase() === 'completed').length;
+            const uniqueUsers = new Set(filteredBookings.filter(b => b.email).map(b => b.email)).size;
+            const totalHours = filteredBookings.reduce((sum, b) => {
+                const hours = parseInt(b.booked_hour) || 0;
+                return sum + hours;
+            }, 0);
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-approved').textContent = approved;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-rejected').textContent = rejected;
+            document.getElementById('stat-users').textContent = uniqueUsers;
+            document.getElementById('stat-hours').textContent = totalHours;
+
+            // Calculate approval rate
+            const approvalRate = total > 0 ? ((approved / total) * 100).toFixed(1) : 0;
+            document.getElementById('stat-approved-change').innerHTML = 
+                `<i class="fas fa-chart-line"></i> ${approvalRate}% approval rate`;
+
+            // Calculate rejection rate
+            const rejectionRate = total > 0 ? ((rejected / total) * 100).toFixed(1) : 0;
+            document.getElementById('stat-rejected-change').innerHTML = 
+                `<i class="fas fa-arrow-down"></i> ${rejectionRate}% rejection rate`;
+
+            // Calculate average hours
+            const avgHours = total > 0 ? (totalHours / total).toFixed(1) : 0;
+            document.getElementById('stat-hours-change').textContent = `Avg ${avgHours} hrs/booking`;
+        }
+
+        // Initialize Charts
+        function initializeCharts() {
+            initBookingsTrendChart();
+            initStatusChart();
+            initLibraryChart();
+            initPeakHoursChart();
+            initBookerTypeChart();
+            initMonthlyChart();
+        }
+
+        // Bookings Trend Chart
+        function initBookingsTrendChart() {
+            const ctx = document.getElementById('bookingsTrendChart');
+            if (charts.bookingsTrend) charts.bookingsTrend.destroy();
+
+            // Group bookings by date
+            const bookingsByDate = {};
+            filteredBookings.forEach(booking => {
+                if (booking.date) {
+                    const date = booking.date;
+                    bookingsByDate[date] = (bookingsByDate[date] || 0) + 1;
+                }
+            });
+
+            const dates = Object.keys(bookingsByDate).sort();
+            const counts = dates.map(date => bookingsByDate[date]);
+
+            charts.bookingsTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: counts,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Status Chart
+        function initStatusChart() {
+            const ctx = document.getElementById('statusChart');
+            if (charts.status) charts.status.destroy();
+
+            const statusCounts = {};
+            filteredBookings.forEach(booking => {
+                const status = booking.status || 'Pending';
+                statusCounts[status] = (statusCounts[status] || 0) + 1;
+            });
+
+            charts.status = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#f39c12', '#27ae60', '#e74c3c', '#3498db']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Library Chart
+        function initLibraryChart() {
+            const ctx = document.getElementById('libraryChart');
+            if (charts.library) charts.library.destroy();
+
+            const libraryCounts = {};
+            filteredBookings.forEach(booking => {
+                if (booking.library) {
+                    const libraryName = getLibraryName(booking.library);
+                    libraryCounts[libraryName] = (libraryCounts[libraryName] || 0) + 1;
+                }
+            });
+
+            charts.library = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(libraryCounts),
+                    datasets: [{
+                        label: 'Bookings',
+                        data: Object.values(libraryCounts),
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Peak Hours Chart
+        function initPeakHoursChart() {
+            const ctx = document.getElementById('peakHoursChart');
+            if (charts.peakHours) charts.peakHours.destroy();
+
+            const hourCounts = {};
+            filteredBookings.forEach(booking => {
+                if (booking.start_time) {
+                    const hour = booking.start_time;
+                    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+                }
+            });
+
+            charts.peakHours = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(hourCounts).sort(),
+                    datasets: [{
+                        label: 'Bookings',
+                        data: Object.keys(hourCounts).sort().map(h => hourCounts[h]),
+                        backgroundColor: '#27ae60'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Booker Type Chart
+        function initBookerTypeChart() {
+            const ctx = document.getElementById('bookerTypeChart');
+            if (charts.bookerType) charts.bookerType.destroy();
+
+            const typeCounts = {};
+            filteredBookings.forEach(booking => {
+                const type = booking.booker_type || '';
+                typeCounts[type] = (typeCounts[type] || 0) + 1;
+            });
+
+            // Format labels properly
+            const formattedLabels = Object.keys(typeCounts).map(t => {
+                if (t.toLowerCase() === 'student') return 'Student';
+                if (t.toLowerCase() === 'faculty officers') return 'Faculty Officers';
+                return t.charAt(0).toUpperCase() + t.slice(1);
+            });
+
+            charts.bookerType = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: formattedLabels,
+                    datasets: [{
+                        data: Object.values(typeCounts),
+                        backgroundColor: ['#3498db', '#9b59b6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Monthly Chart
+        function initMonthlyChart() {
+            const ctx = document.getElementById('monthlyChart');
+            if (charts.monthly) charts.monthly.destroy();
+
+            const monthCounts = {};
+            filteredBookings.forEach(booking => {
+                if (booking.date) {
+                    try {
+                        const date = new Date(booking.date);
+                        if (!isNaN(date.getTime())) {
+                            const month = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+                            monthCounts[month] = (monthCounts[month] || 0) + 1;
+                        }
+                    } catch (e) {
+                        console.warn('Invalid date:', booking.date);
+                    }
+                }
+            });
+
+            charts.monthly = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(monthCounts),
+                    datasets: [{
+                        label: 'Bookings',
+                        data: Object.values(monthCounts),
+                        backgroundColor: '#9b59b6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Populate Bookings Table
+        function populateBookingsTable() {
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredBookings.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h3>No bookings found</h3>
+                                <p>Try adjusting your filters</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filteredBookings.slice(0, 50).forEach(booking => {
+                const statusClass = (booking.status || 'pending').toLowerCase();
+                const bookerType = booking.booker_type || 'N/A';
+                const libraryName = getLibraryName(booking.library);
+                const startTime = formatTime(booking.start_time);
+                const endTime = formatTime(booking.end_time);
+                const timeRange = startTime && endTime && startTime !== 'N/A' && endTime !== 'N/A' 
+                    ? `${startTime} - ${endTime}` 
+                    : 'N/A';
+                const hours = booking.booked_hour || 0;
+                
+                const row = `
+                    <tr>
+                        <td>${booking.booked_reference || 'N/A'}</td>
+                        <td>${booking.booking_name || 'N/A'}</td>
+                        <td>${bookerType}</td>
+                        <td>${libraryName}</td>
+                        <td>${formatDate(booking.date)}</td>
+                        <td>${timeRange}</td>
+                        <td><span class="status-badge status-${statusClass}">${booking.status || 'Pending'}</span></td>
+                        <td>${hours}h</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Apply Filters
+        function applyFilters() {
+            const library = document.getElementById('filterLibrary').value;
+            const dateRange = document.getElementById('filterDateRange').value;
+            const status = document.getElementById('filterStatus').value;
+            const bookerType = document.getElementById('filterBookerType').value;
+
+            filteredBookings = allBookings.filter(booking => {
+                // Library filter
+                if (library && booking.library && booking.library.toString() !== library) return false;
+                
+                // Status filter (case-insensitive)
+                if (status && booking.status && booking.status.toLowerCase() !== status.toLowerCase()) return false;
+                
+                // Booker type filter (case-insensitive)
+                if (bookerType && booking.booker_type && booking.booker_type.toLowerCase() !== bookerType.toLowerCase()) return false;
+                
+                // Date range filter
+                if (dateRange !== 'custom') {
+                    const bookingDate = new Date(booking.date);
+                    const today = new Date();
+                    
+                    switch(dateRange) {
+                        case 'today':
+                            if (bookingDate.toDateString() !== today.toDateString()) return false;
+                            break;
+                        case 'week':
+                            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            if (bookingDate < weekAgo) return false;
+                            break;
+                        case 'month':
+                            const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                            if (bookingDate < monthAgo) return false;
+                            break;
+                        case 'year':
+                            const yearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+                            if (bookingDate < yearAgo) return false;
+                            break;
+                    }
+                }
+                
+                return true;
+            });
+
+            updateStats();
+            initializeCharts();
+            populateBookingsTable();
+        }
+
+        // Reset Filters
+        function resetFilters() {
+            document.getElementById('filterLibrary').value = '';
+            document.getElementById('filterDateRange').value = 'month';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterBookerType').value = '';
+            filteredBookings = [...allBookings];
+            applyFilters();
+        }
+
+        // Search Bookings
+        function searchBookings() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                applyFilters(); // Reset to filtered view
+                return;
+            }
+            
+            filteredBookings = allBookings.filter(booking => {
+                const reference = (booking.booked_reference || '').toLowerCase();
+                const name = (booking.booking_name || '').toLowerCase();
+                const email = (booking.email || '').toLowerCase();
+                const purpose = (booking.subject_topic_purpose || '').toLowerCase();
+                const users = (booking.name_users || '').toLowerCase();
+                
+                return reference.includes(searchTerm) ||
+                       name.includes(searchTerm) ||
+                       email.includes(searchTerm) ||
+                       purpose.includes(searchTerm) ||
+                       users.includes(searchTerm);
+            });
+
+            updateStats();
+            populateBookingsTable();
+        }
+
+        // Setup Navigation
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const section = this.dataset.section;
+                    switchSection(section);
+                });
+            });
+        }
+
+        // Switch Section
+        function switchSection(section) {
+            // Update title
+            updateSectionTitle(section);
+            
+            // Hide all sections
+            document.querySelectorAll('.dashboard-section').forEach(s => s.style.display = 'none');
+            
+            // Show selected section
+            const sectionElement = document.getElementById(`section-${section}`);
+            if (sectionElement) {
+                sectionElement.style.display = 'block';
+            }
+            
+            // Load section-specific data
+            switch(section) {
+                case 'overview':
+                    // Already loaded
+                    break;
+                case 'bookings':
+                    loadAllBookingsSection();
+                    break;
+                case 'libraries':
+                    loadLibrariesSection();
+                    break;
+                case 'monthly':
+                    loadMonthlySection();
+                    break;
+                case 'analytics':
+                    loadAnalyticsSection();
+                    break;
+                case 'users':
+                    loadUsersSection();
+                    break;
+            }
+        }
+
+        // Update Section Title
+        function updateSectionTitle(section) {
+            const titles = {
+                overview: 'Dashboard Overview',
+                bookings: 'All Bookings Management',
+                libraries: 'Libraries Report',
+                monthly: 'Monthly Report',
+                analytics: 'Advanced Analytics',
+                users: 'User Statistics'
+            };
+            
+            const subtitles = {
+                overview: 'Monitor your library booking system',
+                bookings: 'View and manage all bookings',
+                libraries: 'Library-specific performance metrics',
+                monthly: 'Monthly trends and comparisons',
+                analytics: 'Deep dive into booking patterns',
+                users: 'User behavior and statistics'
+            };
+            
+            document.getElementById('section-title').textContent = titles[section] || 'Dashboard';
+            document.getElementById('section-subtitle').textContent = subtitles[section] || '';
+        }
+
+        // ========== ALL BOOKINGS SECTION ==========
+        function loadAllBookingsSection() {
+            populateAllBookingsTable(filteredBookings);
+        }
+
+        function populateAllBookingsTable(bookings) {
+            const tbody = document.getElementById('allBookingsTableBody');
+            tbody.innerHTML = '';
+
+            if (bookings.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 40px;">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h3>No bookings found</h3>
+                                <p>Try adjusting your filters</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            bookings.forEach(booking => {
+                const statusClass = (booking.status || 'pending').toLowerCase();
+                const startTime = formatTime(booking.start_time);
+                const endTime = formatTime(booking.end_time);
+                const timeRange = startTime && endTime && startTime !== 'N/A' && endTime !== 'N/A'
+                    ? `${startTime} - ${endTime}`
+                    : 'N/A';
+                
+                const row = `
+                    <tr>
+                        <td>${booking.id || 'N/A'}</td>
+                        <td>${booking.booked_reference || 'N/A'}</td>
+                        <td>${booking.booking_name || 'N/A'}</td>
+                        <td>${booking.booker_type || 'N/A'}</td>
+                        <td>${booking.email || 'N/A'}</td>
+                        <td>${getLibraryName(booking.library)}</td>
+                        <td>${getFacilityName(booking.facility)}</td>
+                        <td>${formatDate(booking.date)}</td>
+                        <td>${timeRange}</td>
+                        <td><span class="status-badge status-${statusClass}">${booking.status || 'Pending'}</span></td>
+                        <td>${booking.booked_hour || 0}h</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function searchAllBookings() {
+            const searchTerm = document.getElementById('searchInputAll').value.toLowerCase();
+            
+            if (!searchTerm) {
+                populateAllBookingsTable(filteredBookings);
+                return;
+            }
+            
+            const filtered = filteredBookings.filter(booking => {
+                return (booking.booked_reference || '').toLowerCase().includes(searchTerm) ||
+                       (booking.booking_name || '').toLowerCase().includes(searchTerm) ||
+                       (booking.email || '').toLowerCase().includes(searchTerm) ||
+                       (booking.subject_topic_purpose || '').toLowerCase().includes(searchTerm);
+            });
+
+            populateAllBookingsTable(filtered);
+        }
+
+        // ========== LIBRARIES REPORT SECTION ==========
+        function loadLibrariesSection() {
+            generateLibraryStats();
+            initLibraryComparisonChart();
+            initLibraryUtilizationChart();
+            populateLibraryDetailsTable();
+        }
+
+        function generateLibraryStats() {
+            const grid = document.getElementById('libraryStatsGrid');
+            grid.innerHTML = '';
+
+            Object.keys(libraries).forEach(libId => {
+                const libBookings = filteredBookings.filter(b => b.library == libId);
+                const libName = libraries[libId];
+                const count = libBookings.length;
+                const hours = libBookings.reduce((sum, b) => sum + (parseInt(b.booked_hour) || 0), 0);
+
+                const card = `
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-building"></i></div>
+                        <div class="stat-label">${libName}</div>
+                        <div class="stat-value">${count}</div>
+                        <div class="stat-change">${hours} total hours</div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+        }
+
+        function initLibraryComparisonChart() {
+            const ctx = document.getElementById('libraryComparisonChart');
+            if (charts.libraryComparison) charts.libraryComparison.destroy();
+
+            const libraryCounts = {};
+            Object.keys(libraries).forEach(id => {
+                libraryCounts[libraries[id]] = filteredBookings.filter(b => b.library == id).length;
+            });
+
+            charts.libraryComparison = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(libraryCounts),
+                    datasets: [{
+                        label: 'Bookings',
+                        data: Object.values(libraryCounts),
+                        backgroundColor: ['#3498db', '#e74c3c', '#f39c12', '#27ae60', '#9b59b6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initLibraryUtilizationChart() {
+            const ctx = document.getElementById('libraryUtilizationChart');
+            if (charts.libraryUtilization) charts.libraryUtilization.destroy();
+
+            const total = filteredBookings.length;
+            const libraryCounts = {};
+            Object.keys(libraries).forEach(id => {
+                const count = filteredBookings.filter(b => b.library == id).length;
+                libraryCounts[libraries[id]] = ((count / total) * 100).toFixed(1);
+            });
+
+            charts.libraryUtilization = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(libraryCounts),
+                    datasets: [{
+                        data: Object.values(libraryCounts),
+                        backgroundColor: ['#3498db', '#e74c3c', '#f39c12', '#27ae60', '#9b59b6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function populateLibraryDetailsTable() {
+            const tbody = document.getElementById('libraryDetailsTableBody');
+            tbody.innerHTML = '';
+
+            Object.keys(libraries).forEach(libId => {
+                const libName = libraries[libId];
+                const libBookings = filteredBookings.filter(b => b.library == libId);
+                const total = libBookings.length;
+                const pending = libBookings.filter(b => (b.status || '').toLowerCase() === 'pending').length;
+                const approved = libBookings.filter(b => (b.status || '').toLowerCase() === 'approved').length;
+                const totalHours = libBookings.reduce((sum, b) => sum + (parseInt(b.booked_hour) || 0), 0);
+                const avgHours = total > 0 ? (totalHours / total).toFixed(1) : 0;
+                
+                // Find most used facility
+                const facilityCounts = {};
+                libBookings.forEach(b => {
+                    if (b.facility) {
+                        facilityCounts[b.facility] = (facilityCounts[b.facility] || 0) + 1;
+                    }
+                });
+                const mostUsedFacId = Object.keys(facilityCounts).reduce((a, b) => facilityCounts[a] > facilityCounts[b] ? a : b, null);
+                const mostUsedFac = mostUsedFacId ? getFacilityName(mostUsedFacId) : 'N/A';
+
+                const row = `
+                    <tr>
+                        <td><strong>${libName}</strong></td>
+                        <td>${total}</td>
+                        <td>${pending}</td>
+                        <td>${approved}</td>
+                        <td>${totalHours}h</td>
+                        <td>${avgHours}h</td>
+                        <td>${mostUsedFac}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // ========== MONTHLY REPORT SECTION ==========
+        function loadMonthlySection() {
+            calculateMonthlyStats();
+            initMonthlyTrendChart();
+            initMonthlyStatusChart();
+            initMonthlyUserTypeChart();
+        }
+
+        function calculateMonthlyStats() {
+            const now = new Date();
+            const thisMonth = filteredBookings.filter(b => {
+                if (!b.date) return false;
+                const d = new Date(b.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).length;
+
+            const lastMonth = filteredBookings.filter(b => {
+                if (!b.date) return false;
+                const d = new Date(b.date);
+                const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
+            }).length;
+
+            const growth = lastMonth > 0 ? (((thisMonth - lastMonth) / lastMonth) * 100).toFixed(1) : 0;
+
+            // Find best month
+            const monthCounts = {};
+            filteredBookings.forEach(b => {
+                if (b.date) {
+                    const d = new Date(b.date);
+                    const key = `${d.getFullYear()}-${d.getMonth()}`;
+                    monthCounts[key] = (monthCounts[key] || 0) + 1;
+                }
+            });
+            const bestMonthKey = Object.keys(monthCounts).reduce((a, b) => monthCounts[a] > monthCounts[b] ? a : b, null);
+            const bestMonth = bestMonthKey ? new Date(bestMonthKey.split('-')[0], bestMonthKey.split('-')[1]).toLocaleString('default', { month: 'short', year: 'numeric' }) : 'N/A';
+
+            document.getElementById('stat-this-month').textContent = thisMonth;
+            document.getElementById('stat-last-month').textContent = lastMonth;
+            document.getElementById('stat-growth-rate').textContent = growth + '%';
+            document.getElementById('stat-best-month').textContent = bestMonth;
+            
+            document.getElementById('stat-this-month-change').textContent = now.toLocaleString('default', { month: 'long' });
+            document.getElementById('stat-last-month-change').textContent = new Date(now.getFullYear(), now.getMonth() - 1).toLocaleString('default', { month: 'long' });
+            document.getElementById('stat-growth-rate-change').innerHTML = growth >= 0 ? '<i class="fas fa-arrow-up"></i> vs last month' : '<i class="fas fa-arrow-down"></i> vs last month';
+            document.getElementById('stat-best-month-change').textContent = `${monthCounts[bestMonthKey] || 0} bookings`;
+        }
+
+        function initMonthlyTrendChart() {
+            const ctx = document.getElementById('monthlyTrendChart');
+            if (charts.monthlyTrend) charts.monthlyTrend.destroy();
+
+            const monthCounts = {};
+            filteredBookings.forEach(b => {
+                if (b.date) {
+                    const d = new Date(b.date);
+                    const key = d.toLocaleString('default', { month: 'short', year: 'numeric' });
+                    monthCounts[key] = (monthCounts[key] || 0) + 1;
+                }
+            });
+
+            const sortedMonths = Object.keys(monthCounts).slice(-12);
+
+            charts.monthlyTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: sortedMonths.map(m => monthCounts[m]),
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initMonthlyStatusChart() {
+            const ctx = document.getElementById('monthlyStatusChart');
+            if (charts.monthlyStatus) charts.monthlyStatus.destroy();
+
+            // Simplified for demo
+            const statuses = ['Pending', 'Approved', 'Rejected', 'Completed'];
+            const data = statuses.map(s => filteredBookings.filter(b => (b.status || '').toLowerCase() === s.toLowerCase()).length);
+
+            charts.monthlyStatus = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: statuses,
+                    datasets: [{
+                        label: 'Count',
+                        data: data,
+                        backgroundColor: ['#f39c12', '#27ae60', '#e74c3c', '#3498db']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initMonthlyUserTypeChart() {
+            const ctx = document.getElementById('monthlyUserTypeChart');
+            if (charts.monthlyUserType) charts.monthlyUserType.destroy();
+
+            const students = filteredBookings.filter(b => (b.booker_type || '').toLowerCase() === 'student').length;
+            const faculty = filteredBookings.filter(b => (b.booker_type || '').toLowerCase() === 'faculty officers').length;
+
+            charts.monthlyUserType = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Students', 'Faculty Officers'],
+                    datasets: [{
+                        data: [students, faculty],
+                        backgroundColor: ['#3498db', '#9b59b6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // ========== ANALYTICS SECTION ==========
+        function loadAnalyticsSection() {
+            calculateAnalyticsStats();
+            initDurationDistributionChart();
+            initDayOfWeekChart();
+            initHourlyHeatmapChart();
+            loadPurposeAnalysis();
+        }
+
+        function calculateAnalyticsStats() {
+            const avgDuration = (filteredBookings.reduce((sum, b) => sum + (parseInt(b.booked_hour) || 0), 0) / filteredBookings.length).toFixed(1);
+            
+            // Find peak hour
+            const hourCounts = {};
+            filteredBookings.forEach(b => {
+                if (b.start_time) {
+                    hourCounts[b.start_time] = (hourCounts[b.start_time] || 0) + 1;
+                }
+            });
+            const peakHour = Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b, '-');
+
+            // Find top library
+            const libCounts = {};
+            filteredBookings.forEach(b => {
+                if (b.library) {
+                    libCounts[b.library] = (libCounts[b.library] || 0) + 1;
+                }
+            });
+            const topLibId = Object.keys(libCounts).reduce((a, b) => libCounts[a] > libCounts[b] ? a : b, null);
+            const topLib = topLibId ? libraries[topLibId] || `Library ${topLibId}` : 'N/A';
+
+            // Find top booker type
+            const typeCounts = {};
+            filteredBookings.forEach(b => {
+                if (b.booker_type) {
+                    typeCounts[b.booker_type] = (typeCounts[b.booker_type] || 0) + 1;
+                }
+            });
+            const topType = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b, 'N/A');
+
+            document.getElementById('stat-avg-duration').textContent = avgDuration;
+            document.getElementById('stat-peak-hour').textContent = peakHour;
+            document.getElementById('stat-top-library').textContent = topLib;
+            document.getElementById('stat-top-booker').textContent = topType;
+        }
+
+        function initDurationDistributionChart() {
+            const ctx = document.getElementById('durationDistributionChart');
+            if (charts.durationDist) charts.durationDist.destroy();
+
+            const durations = {};
+            filteredBookings.forEach(b => {
+                const h = parseInt(b.booked_hour) || 0;
+                durations[h] = (durations[h] || 0) + 1;
+            });
+
+            charts.durationDist = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(durations).sort((a, b) => a - b),
+                    datasets: [{
+                        label: 'Count',
+                        data: Object.keys(durations).sort((a, b) => a - b).map(k => durations[k]),
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initDayOfWeekChart() {
+            const ctx = document.getElementById('dayOfWeekChart');
+            if (charts.dayOfWeek) charts.dayOfWeek.destroy();
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+
+            filteredBookings.forEach(b => {
+                if (b.date) {
+                    const d = new Date(b.date);
+                    dayCounts[d.getDay()]++;
+                }
+            });
+
+            charts.dayOfWeek = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: dayCounts,
+                        backgroundColor: '#27ae60'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initHourlyHeatmapChart() {
+            const ctx = document.getElementById('hourlyHeatmapChart');
+            if (charts.hourlyHeatmap) charts.hourlyHeatmap.destroy();
+
+            const hourCounts = {};
+            filteredBookings.forEach(b => {
+                if (b.start_time) {
+                    hourCounts[b.start_time] = (hourCounts[b.start_time] || 0) + 1;
+                }
+            });
+
+            const sortedHours = Object.keys(hourCounts).sort();
+
+            charts.hourlyHeatmap = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedHours,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: sortedHours.map(h => hourCounts[h]),
+                        backgroundColor: '#e74c3c'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function loadPurposeAnalysis() {
+            const purposeCounts = {};
+            filteredBookings.forEach(b => {
+                if (b.subject_topic_purpose) {
+                    purposeCounts[b.subject_topic_purpose] = (purposeCounts[b.subject_topic_purpose] || 0) + 1;
+                }
+            });
+
+            const sorted = Object.entries(purposeCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            const list = document.getElementById('purposeAnalysisList');
+            list.innerHTML = '';
+
+            sorted.forEach(([ purpose, count], index) => {
+                const item = `
+                    <div style="padding: 10px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${index + 1}.</strong> ${purpose}
+                        </div>
+                        <div style="background: #3498db; color: white; padding: 4px 12px; border-radius: 12px; font-weight: 600;">
+                            ${count}
+                        </div>
+                    </div>
+                `;
+                list.innerHTML += item;
+            });
+        }
+
+        // ========== USER STATISTICS SECTION ==========
+        function loadUsersSection() {
+            calculateUserStats();
+            initTopUsersChart();
+            initUserTypeDistributionChart();
+            populateUserDetailsTable();
+        }
+
+        function calculateUserStats() {
+            const users = {};
+            filteredBookings.forEach(b => {
+                if (b.email) {
+                    if (!users[b.email]) {
+                        users[b.email] = {
+                            name: b.booking_name,
+                            type: b.booker_type,
+                            bookings: []
+                        };
+                    }
+                    users[b.email].bookings.push(b);
+                }
+            });
+
+            const totalUsers = Object.keys(users).length;
+            const students = Object.values(users).filter(u => (u.type || '').toLowerCase() === 'student').length;
+            const faculty = Object.values(users).filter(u => (u.type || '').toLowerCase() === 'faculty officers').length;
+
+            const topUser = Object.entries(users)
+                .sort((a, b) => b[1].bookings.length - a[1].bookings.length)[0];
+
+            document.getElementById('stat-total-users').textContent = totalUsers;
+            document.getElementById('stat-students').textContent = students;
+            document.getElementById('stat-faculty').textContent = faculty;
+            document.getElementById('stat-top-user').textContent = topUser ? topUser[1].name : 'N/A';
+            document.getElementById('stat-top-user-bookings').textContent = topUser ? `${topUser[1].bookings.length} bookings` : '';
+            
+            document.getElementById('stat-students-change').textContent = `${((students / totalUsers) * 100).toFixed(1)}% of users`;
+            document.getElementById('stat-faculty-change').textContent = `${((faculty / totalUsers) * 100).toFixed(1)}% of users`;
+        }
+
+        function initTopUsersChart() {
+            const ctx = document.getElementById('topUsersChart');
+            if (charts.topUsers) charts.topUsers.destroy();
+
+            const users = {};
+            filteredBookings.forEach(b => {
+                if (b.email) {
+                    if (!users[b.email]) {
+                        users[b.email] = { name: b.booking_name, count: 0 };
+                    }
+                    users[b.email].count++;
+                }
+            });
+
+            const top10 = Object.entries(users)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 10);
+
+            charts.topUsers = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(u => u[1].name),
+                    datasets: [{
+                        label: 'Bookings',
+                        data: top10.map(u => u[1].count),
+                        backgroundColor: '#9b59b6'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initUserTypeDistributionChart() {
+            const ctx = document.getElementById('userTypeDistributionChart');
+            if (charts.userTypeDist) charts.userTypeDist.destroy();
+
+            const types = {};
+            const users = {};
+            
+            filteredBookings.forEach(b => {
+                if (b.email && !users[b.email]) {
+                    users[b.email] = true;
+                    const type = b.booker_type || 'Unknown';
+                    types[type] = (types[type] || 0) + 1;
+                }
+            });
+
+            charts.userTypeDist = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(types),
+                    datasets: [{
+                        data: Object.values(types),
+                        backgroundColor: ['#3498db', '#9b59b6', '#e74c3c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function populateUserDetailsTable() {
+            const tbody = document.getElementById('userDetailsTableBody');
+            tbody.innerHTML = '';
+
+            const users = {};
+            filteredBookings.forEach(b => {
+                if (b.email) {
+                    if (!users[b.email]) {
+                        users[b.email] = {
+                            name: b.booking_name,
+                            type: b.booker_type,
+                            bookings: [],
+                            pending: 0,
+                            approved: 0,
+                            hours: 0
+                        };
+                    }
+                    users[b.email].bookings.push(b);
+                    if ((b.status || '').toLowerCase() === 'pending') users[b.email].pending++;
+                    if ((b.status || '').toLowerCase() === 'approved') users[b.email].approved++;
+                    users[b.email].hours += parseInt(b.booked_hour) || 0;
+                }
+            });
+
+            Object.entries(users)
+                .sort((a, b) => b[1].bookings.length - a[1].bookings.length)
+                .forEach(([email, user]) => {
+                    const lastBooking = user.bookings.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                    const row = `
+                        <tr>
+                            <td>${user.name}</td>
+                            <td>${email}</td>
+                            <td>${user.type}</td>
+                            <td><strong>${user.bookings.length}</strong></td>
+                            <td>${user.pending}</td>
+                            <td>${user.approved}</td>
+                            <td>${user.hours}h</td>
+                            <td>${formatDate(lastBooking.date)}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+        }
+
+        function searchUsers() {
+            const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
+            const rows = document.querySelectorAll('#userDetailsTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        // Refresh Data
+        async function refreshData() {
+            const btn = event.target.closest('button');
+            const icon = btn.querySelector('i');
+            
+            // Add spinning animation
+            icon.classList.add('fa-spin');
+            btn.disabled = true;
+            
+            try {
+                await loadDashboardData();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            } finally {
+                // Remove spinning animation
+                icon.classList.remove('fa-spin');
+                btn.disabled = false;
+            }
+        }
+
+        // Export Report
+        function exportReport() {
+            const csvContent = generateCSV();
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `library_bookings_report_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Generate CSV
+        function generateCSV() {
+            const headers = ['Reference', 'Name', 'Type', 'Email', 'Users', 'Purpose', 'Library', 'Facility', 'Date', 'Start Time', 'End Time', 'Status', 'Hours', 'Timestamp'];
+            const rows = filteredBookings.map(b => [
+                `"${b.booked_reference || ''}"`,
+                `"${b.booking_name || ''}"`,
+                `"${b.booker_type || ''}"`,
+                `"${b.email || ''}"`,
+                `"${b.name_users || ''}"`,
+                `"${b.subject_topic_purpose || ''}"`,
+                `"${getLibraryName(b.library)}"`,
+                `"${getFacilityName(b.facility)}"`,
+                `"${b.date || ''}"`,
+                `"${b.start_time || ''}"`,
+                `"${b.end_time || ''}"`,
+                `"${b.status || ''}"`,
+                `"${b.booked_hour || 0}"`,
+                `"${b.timestamp || ''}"`
+            ]);
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // Format Date
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored session data if needed
+                sessionStorage.clear();
+                localStorage.clear();
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
