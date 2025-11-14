@@ -426,12 +426,12 @@
             color: #856404;
         }
 
-        .status-approved {
+        .status-completed {
             background: #d4edda;
             color: #155724;
         }
 
-        .status-rejected {
+        .status-cancelled {
             background: #f8d7da;
             color: #721c24;
         }
@@ -690,8 +690,8 @@
                     <select id="filterStatus" onchange="applyFilters()">
                         <option value="">All Status</option>
                         <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
+                        <option value="completed">completed</option>
+                        <option value="cancelled">cancelled</option>
                         <option value="Completed">Completed</option>
                     </select>
                 </div>
@@ -700,7 +700,7 @@
                     <select id="filterBookerType" onchange="applyFilters()">
                         <option value="">All Types</option>
                         <option value="student">Student</option>
-                        <option value="faculty officers">Faculty Officers</option>
+                        <option value="faculty">Faculty</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -739,10 +739,10 @@
                     <div class="stat-icon">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="stat-label">Approved</div>
-                    <div class="stat-value" id="stat-approved">0</div>
-                    <div class="stat-change positive" id="stat-approved-change">
-                        <i class="fas fa-arrow-up"></i> 0% approval rate
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value" id="stat-completed">0</div>
+                    <div class="stat-change positive" id="stat-completed-change">
+                        <i class="fas fa-arrow-up"></i> 0% completed rate
                     </div>
                 </div>
 
@@ -761,10 +761,10 @@
                     <div class="stat-icon">
                         <i class="fas fa-times-circle"></i>
                     </div>
-                    <div class="stat-label">Rejected</div>
-                    <div class="stat-value" id="stat-rejected">0</div>
-                    <div class="stat-change negative" id="stat-rejected-change">
-                        <i class="fas fa-arrow-down"></i> 0% rejection rate
+                    <div class="stat-label">Cancelled</div>
+                    <div class="stat-value" id="stat-cancelled">0</div>
+                    <div class="stat-change negative" id="stat-cancelled-change">
+                        <i class="fas fa-arrow-down"></i> 0% cancelled rate
                     </div>
                 </div>
 
@@ -920,7 +920,6 @@
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Status</th>
-                                <th>Hours</th>
                             </tr>
                         </thead>
                         <tbody id="allBookingsTableBody">
@@ -974,7 +973,7 @@
                                 <th>Library</th>
                                 <th>Total Bookings</th>
                                 <th>Pending</th>
-                                <th>Approved</th>
+                                <th>Completed</th>
                                 <th>Total Hours</th>
                                 <th>Avg Hours/Booking</th>
                                 <th>Most Used Facility</th>
@@ -1146,7 +1145,7 @@
                 </div>
                 <div class="stat-card purple">
                     <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                    <div class="stat-label">Faculty Officers</div>
+                    <div class="stat-label">Faculty</div>
                     <div class="stat-value" id="stat-faculty">0</div>
                     <div class="stat-change" id="stat-faculty-change"></div>
                 </div>
@@ -1199,7 +1198,7 @@
                                 <th>Type</th>
                                 <th>Total Bookings</th>
                                 <th>Pending</th>
-                                <th>Approved</th>
+                                <th>Completed</th>
                                 <th>Total Hours</th>
                                 <th>Last Booking</th>
                             </tr>
@@ -1722,35 +1721,38 @@
         // Update Statistics
         function updateStats() {
             const total = filteredBookings.length;
-            const approved = filteredBookings.filter(b => b.status && b.status.toLowerCase() === 'approved').length;
-            const pending = filteredBookings.filter(b => !b.status || b.status.toLowerCase() === 'pending').length;
-            const rejected = filteredBookings.filter(b => b.status && b.status.toLowerCase() === 'rejected').length;
             const completed = filteredBookings.filter(b => b.status && b.status.toLowerCase() === 'completed').length;
+            const pending = filteredBookings.filter(b => !b.status || b.status.toLowerCase() === 'pending').length;
+            const cancelled = filteredBookings.filter(b => b.status && b.status.toLowerCase() === 'cancelled').length;
             const uniqueUsers = new Set(filteredBookings.filter(b => b.email).map(b => b.email)).size;
             const totalHours = filteredBookings.reduce((sum, b) => {
                 const hours = parseInt(b.booked_hour) || 0;
+                console.log("Hours:", hours)
                 return sum + hours;
             }, 0);
 
             document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-approved').textContent = approved;
+            document.getElementById('stat-completed').textContent = completed;
             document.getElementById('stat-pending').textContent = pending;
-            document.getElementById('stat-rejected').textContent = rejected;
+            document.getElementById('stat-cancelled').textContent = cancelled;
             document.getElementById('stat-users').textContent = uniqueUsers;
             document.getElementById('stat-hours').textContent = totalHours;
 
             // Calculate approval rate
-            const approvalRate = total > 0 ? ((approved / total) * 100).toFixed(1) : 0;
-            document.getElementById('stat-approved-change').innerHTML = 
-                `<i class="fas fa-chart-line"></i> ${approvalRate}% approval rate`;
+            const completedRate = total > 0 ? ((completed / total) * 100).toFixed(1) : 0;
+            document.getElementById('stat-completed-change').innerHTML = 
+                `<i class="fas fa-chart-line"></i> ${completedRate}% completed rate`;
 
             // Calculate rejection rate
-            const rejectionRate = total > 0 ? ((rejected / total) * 100).toFixed(1) : 0;
-            document.getElementById('stat-rejected-change').innerHTML = 
-                `<i class="fas fa-arrow-down"></i> ${rejectionRate}% rejection rate`;
+            const cancelledRate = total > 0 ? ((cancelled / total) * 100).toFixed(1) : 0;
+            document.getElementById('stat-cancelled-change').innerHTML = 
+                `<i class="fas fa-arrow-down"></i> ${cancelledRate}% cancelled rate`;
 
             // Calculate average hours
+            console.log("Total:",total)
+            console.log("Total Hours:", totalHours)
             const avgHours = total > 0 ? (totalHours / total).toFixed(1) : 0;
+            console.log("Avg Hours:",avgHours)
             document.getElementById('stat-hours-change').textContent = `Avg ${avgHours} hrs/booking`;
         }
 
@@ -1778,8 +1780,16 @@
                 }
             });
 
-            const dates = Object.keys(bookingsByDate).sort();
-            const counts = dates.map(date => bookingsByDate[date]);
+            const rawDates = Object.keys(bookingsByDate).sort();
+            const dates = rawDates.map(dateStr => {
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                return `${mm}/${dd}/${yyyy}`;
+            });
+            const counts = rawDates.map(date => bookingsByDate[date]);
 
             charts.bookingsTrend = new Chart(ctx, {
                 type: 'line',
@@ -1864,6 +1874,22 @@
             });
         }
 
+        function formatTime(time) {
+                
+            let h = 0, m = 0;
+
+            const d = new Date(time)
+            h = d.getHours()
+            m = d.getMinutes()
+
+            // Convert to 12-hour format
+            const period = h >= 12 ? 'PM' : 'AM';
+            let hour12 = h % 12;
+            hour12 = hour12 ? hour12 : 12;
+
+            return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
+        }
+
         // Peak Hours Chart
         function initPeakHoursChart() {
             const ctx = document.getElementById('peakHoursChart');
@@ -1872,8 +1898,8 @@
             const hourCounts = {};
             filteredBookings.forEach(booking => {
                 if (booking.start_time) {
-                    const hour = booking.start_time;
-                    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+                    const readable = formatTime(booking.start_time);
+                    hourCounts[readable] = (hourCounts[readable] || 0) + 1;
                 }
             });
 
@@ -1911,7 +1937,7 @@
             // Format labels properly
             const formattedLabels = Object.keys(typeCounts).map(t => {
                 if (t.toLowerCase() === 'student') return 'Student';
-                if (t.toLowerCase() === 'faculty officers') return 'Faculty Officers';
+                if (t.toLowerCase() === 'faculty') return 'Faculty';
                 return t.charAt(0).toUpperCase() + t.slice(1);
             });
 
@@ -2224,7 +2250,6 @@
                         <td>${formatDate(booking.date)}</td>
                         <td>${timeRange}</td>
                         <td><span class="status-badge status-${statusClass}">${booking.status || 'Pending'}</span></td>
-                        <td>${booking.booked_hour || 0}h</td>
                     </tr>
                 `;
                 tbody.innerHTML += row;
@@ -2342,7 +2367,7 @@
                 const libBookings = filteredBookings.filter(b => b.library == libId);
                 const total = libBookings.length;
                 const pending = libBookings.filter(b => (b.status || '').toLowerCase() === 'pending').length;
-                const approved = libBookings.filter(b => (b.status || '').toLowerCase() === 'approved').length;
+                const completed = libBookings.filter(b => (b.status || '').toLowerCase() === 'completed').length;
                 const totalHours = libBookings.reduce((sum, b) => sum + (parseInt(b.booked_hour) || 0), 0);
                 const avgHours = total > 0 ? (totalHours / total).toFixed(1) : 0;
                 
@@ -2361,7 +2386,7 @@
                         <td><strong>${libName}</strong></td>
                         <td>${total}</td>
                         <td>${pending}</td>
-                        <td>${approved}</td>
+                        <td>${completed}</td>
                         <td>${totalHours}h</td>
                         <td>${avgHours}h</td>
                         <td>${mostUsedFac}</td>
@@ -2460,7 +2485,7 @@
             if (charts.monthlyStatus) charts.monthlyStatus.destroy();
 
             // Simplified for demo
-            const statuses = ['Pending', 'Approved', 'Rejected', 'Completed'];
+            const statuses = ['Pending', 'Cancelled', 'Completed'];
             const data = statuses.map(s => filteredBookings.filter(b => (b.status || '').toLowerCase() === s.toLowerCase()).length);
 
             charts.monthlyStatus = new Chart(ctx, {
@@ -2486,12 +2511,12 @@
             if (charts.monthlyUserType) charts.monthlyUserType.destroy();
 
             const students = filteredBookings.filter(b => (b.booker_type || '').toLowerCase() === 'student').length;
-            const faculty = filteredBookings.filter(b => (b.booker_type || '').toLowerCase() === 'faculty officers').length;
+            const faculty = filteredBookings.filter(b => (b.booker_type || '').toLowerCase() === 'faculty').length;
 
             charts.monthlyUserType = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: ['Students', 'Faculty Officers'],
+                    labels: ['Students', 'Faculty'],
                     datasets: [{
                         data: [students, faculty],
                         backgroundColor: ['#3498db', '#9b59b6']
@@ -2545,7 +2570,7 @@
             const topType = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b, 'N/A');
 
             document.getElementById('stat-avg-duration').textContent = avgDuration;
-            document.getElementById('stat-peak-hour').textContent = peakHour;
+            document.getElementById('stat-peak-hour').textContent = formatTime(peakHour);
             document.getElementById('stat-top-library').textContent = topLib;
             document.getElementById('stat-top-booker').textContent = topType;
         }
@@ -2617,7 +2642,8 @@
             const hourCounts = {};
             filteredBookings.forEach(b => {
                 if (b.start_time) {
-                    hourCounts[b.start_time] = (hourCounts[b.start_time] || 0) + 1;
+
+                    hourCounts[formatTime(b.start_time)] = (hourCounts[formatTime(b.start_time)] || 0) + 1;
                 }
             });
 
@@ -2696,7 +2722,7 @@
 
             const totalUsers = Object.keys(users).length;
             const students = Object.values(users).filter(u => (u.type || '').toLowerCase() === 'student').length;
-            const faculty = Object.values(users).filter(u => (u.type || '').toLowerCase() === 'faculty officers').length;
+            const faculty = Object.values(users).filter(u => (u.type || '').toLowerCase() === 'faculty').length;
 
             const topUser = Object.entries(users)
                 .sort((a, b) => b[1].bookings.length - a[1].bookings.length)[0];
@@ -2792,13 +2818,13 @@
                             type: b.booker_type,
                             bookings: [],
                             pending: 0,
-                            approved: 0,
+                            completed: 0,
                             hours: 0
                         };
                     }
                     users[b.email].bookings.push(b);
                     if ((b.status || '').toLowerCase() === 'pending') users[b.email].pending++;
-                    if ((b.status || '').toLowerCase() === 'approved') users[b.email].approved++;
+                    if ((b.status || '').toLowerCase() === 'completed') users[b.email].completed++;
                     users[b.email].hours += parseInt(b.booked_hour) || 0;
                 }
             });
@@ -2814,7 +2840,7 @@
                             <td>${user.type}</td>
                             <td><strong>${user.bookings.length}</strong></td>
                             <td>${user.pending}</td>
-                            <td>${user.approved}</td>
+                            <td>${user.completed}</td>
                             <td>${user.hours}h</td>
                             <td>${formatDate(lastBooking.date)}</td>
                         </tr>
