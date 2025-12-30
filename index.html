@@ -1,401 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Login - Library Booking System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-        }
-
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .lock-icon {
-            font-size: 64px;
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            color: #444;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #999;
-            font-size: 18px;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px 15px 14px 45px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #999;
-            font-size: 18px;
-            user-select: none;
-        }
-
-        .password-toggle:hover {
-            color: #667eea;
-        }
-
-        .remember-forgot {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #666;
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: auto;
-            padding: 0;
-            cursor: pointer;
-        }
-
-        .forgot-password {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .login-btn:active {
-            transform: translateY(0);
-        }
-
-        .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .error-message {
-            background: #fee;
-            border: 1px solid #fcc;
-            color: #c33;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .back-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .back-link a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .login-container {
-                padding: 30px 20px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            .remember-forgot {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
-        }
-
-        /* Loading spinner */
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
+    <link rel="stylesheet" href="resources/css/style.css" />
+  </head>
+  <body>
     <div class="login-container">
-        <div class="login-header">
-            <div class="lock-icon">🔒</div>
-            <h1>Admin Login</h1>
-            <p class="subtitle">Library Booking System</p>
+      <div class="login-header">
+        <div class="lock-icon">🔒</div>
+        <h1>Admin Login</h1>
+        <p class="subtitle">Library Booking System</p>
+      </div>
+
+      <div class="error-message" id="errorMessage">
+        <!-- Error message will appear here -->
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter your username"
+              required
+              autocomplete="username"
+            />
+          </div>
         </div>
 
-        <div class="error-message" id="errorMessage">
-            <!-- Error message will appear here -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔑</span>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            />
+            <span class="password-toggle" id="togglePassword">👁️</span>
+          </div>
         </div>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">👤</span>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        placeholder="Enter your username"
-                        required
-                        autocomplete="username"
-                    >
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">🔑</span>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Enter your password"
-                        required
-                        autocomplete="current-password"
-                    >
-                    <span class="password-toggle" id="togglePassword">👁️</span>
-                </div>
-            </div>
-
-            <div class="remember-forgot">
-                <label class="remember-me">
-                    <input type="checkbox" id="rememberMe" name="rememberMe">
-                    <span>Remember me</span>
-                </label>
-                <a href="#" class="forgot-password">Forgot password?</a>
-            </div>
-
-            <button type="submit" class="login-btn" id="loginBtn">
-                Login
-            </button>
-        </form>
-
-        <div class="back-link">
-            <a href="index.html">← Back to Booking Page</a>
+        <div class="remember-forgot">
+          <label class="remember-me">
+            <input type="checkbox" id="rememberMe" name="rememberMe" />
+            <span>Remember me</span>
+          </label>
+          <a href="#" class="forgot-password">Forgot password?</a>
         </div>
+
+        <button type="submit" class="login-btn" id="loginBtn">Login</button>
+      </form>
+
+      <div class="back-link">
+        <a href="index.html">← Back to Booking Page</a>
+      </div>
     </div>
 
-    <script>
-        const loginAPI = "https://script.google.com/macros/s/AKfycbzRhy-4W6gsO4g37pVx_utTruVawXXU1dOvgruW03CPaFz5U1VU1zU2MXsjSRZK1ImS5g/exec";
-
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
-        });
-
-        // Handle form submission
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
-            const loginBtn = document.getElementById('loginBtn');
-            const errorMessage = document.getElementById('errorMessage');
-
-            // Hide previous error
-            errorMessage.classList.remove('show');
-            errorMessage.textContent = '';
-
-            // Show loading state
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="spinner"></span> Logging in...';
-
-            try {
-                // Build API URL with credentials
-                const url = new URL(loginAPI);
-                url.searchParams.append('username', username);
-                url.searchParams.append('password', password);
-
-                console.log('Attempting login...');
-
-                const response = await fetch(url.toString());
-                const result = await response.json();
-
-                console.log('Login response:', result);
-
-                if (result.success) {
-                    // Store admin session
-                    sessionStorage.setItem('adminAuth', JSON.stringify({
-                        username: result.username,
-                        role: result.role,
-                        loginTime: new Date().toISOString()
-                    }));
-
-                    // Store in localStorage if "Remember me" is checked
-                    if (rememberMe) {
-                        localStorage.setItem('adminAuth', JSON.stringify({
-                            username: result.username,
-                            role: result.role
-                        }));
-                    }
-
-                    // Show success and redirect
-                    loginBtn.innerHTML = '✓ Login Successful!';
-                    loginBtn.style.background = 'linear-gradient(135deg, #27ae60 0%, #229954 100%)';
-
-                    setTimeout(() => {
-                        window.location.href = 'admin_dashboard.html';
-                    }, 1000);
-
-                } else {
-                    // Show error message
-                    errorMessage.textContent = result.message || 'Invalid username or password';
-                    errorMessage.classList.add('show');
-                    
-                    // Reset button
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = 'Login';
-                }
-
-            } catch (error) {
-                console.error('Login error:', error);
-                errorMessage.textContent = 'Connection error. Please try again.';
-                errorMessage.classList.add('show');
-                
-                // Reset button
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Login';
-            }
-        });
-
-        // Check if already logged in
-        window.addEventListener('DOMContentLoaded', () => {
-            const adminAuth = sessionStorage.getItem('adminAuth') || localStorage.getItem('adminAuth');
-            
-            if (adminAuth) {
-                // Already logged in, redirect to dashboard
-                window.location.href = 'admin_dashboard.html';
-            }
-        });
-    </script>
-</body>
+    <script src="resources/js/script.js"></script>
+  </body>
 </html>
