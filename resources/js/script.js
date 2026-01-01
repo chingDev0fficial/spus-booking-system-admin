@@ -1,21 +1,25 @@
-const loginAPI =
-  "https://script.google.com/macros/s/AKfycbzRhy-4W6gsO4g37pVx_utTruVawXXU1dOvgruW03CPaFz5U1VU1zU2MXsjSRZK1ImS5g/exec";
+document.addEventListener("DOMContentLoaded", () => {
+  const loginAPI =
+    "https://script.google.com/macros/s/AKfycbzRhy-4W6gsO4g37pVx_utTruVawXXU1dOvgruW03CPaFz5U1VU1zU2MXsjSRZK1ImS5g/exec";
 
-// Toggle password visibility
-document
-  .getElementById("togglePassword")
-  .addEventListener("click", function () {
-    const passwordInput = document.getElementById("password");
-    const type =
-      passwordInput.getAttribute("type") === "password" ? "text" : "password";
-    passwordInput.setAttribute("type", type);
-    this.textContent = type === "password" ? "👁️" : "👁️‍🗨️";
-  });
+  // Toggle password visibility
+  const CUSTOM_EYE = document.getElementById("eyeGroup");
+  const SLASH = document.getElementById("slash");
+  const PASSWORD_INPUT = document.getElementById("password");
+  const SUBMITION = document.getElementById("loginForm");
+  let isInputTypePassword = true;
 
-// Handle form submission
-document
-  .getElementById("loginForm")
-  .addEventListener("submit", async function (e) {
+  const handleToggleEye = () => {
+    CUSTOM_EYE.classList.toggle("slashed");
+    SLASH.style.boxShadow = isInputTypePassword ? "none" : "0 0 0 1px white";
+
+    isInputTypePassword = !isInputTypePassword;
+
+    const type = isInputTypePassword ? "password" : "text";
+    PASSWORD_INPUT.setAttribute("type", type);
+  };
+
+  const handleFormSubmition = async function (e) {
     e.preventDefault();
 
     const username = document.getElementById("username").value;
@@ -94,10 +98,11 @@ document
       loginBtn.disabled = false;
       loginBtn.innerHTML = "Login";
     }
-  });
+  };
 
-// Check if already logged in
-window.addEventListener("DOMContentLoaded", () => {
+  CUSTOM_EYE.addEventListener("click", handleToggleEye);
+  SUBMITION.addEventListener("submit", handleFormSubmition);
+
   const adminAuth =
     sessionStorage.getItem("adminAuth") || localStorage.getItem("adminAuth");
 

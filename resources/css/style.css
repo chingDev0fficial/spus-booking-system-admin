@@ -47,30 +47,106 @@ h1 {
 
 .form-group {
   margin-bottom: 20px;
-}
-
-label {
-  display: block;
-  color: #444;
-  font-weight: 600;
-  margin-bottom: 8px;
-  font-size: 14px;
+  border: 1px #000 solid;
+  padding: 0 0 0 5px;
+  border-radius: 5px;
 }
 
 .input-wrapper {
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #444;
+  gap: 5px;
 }
 
-.input-icon {
+/* Custom input */
+.custom-input {
+  width: 100%;
+  position: relative;
+}
+
+.custom-input input {
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+  padding: 8px 30px 8px 5px;
+  border: none;
+  outline: none;
+  border-radius: 5px;
+}
+
+.custom-input label {
   position: absolute;
+  font-size: 1rem;
+  top: 20%;
+  left: 8px;
+  background-color: #fff;
+  color: #444;
+  pointer-events: none;
+  transition: 0.3s ease;
+}
+
+.custom-input input:focus ~ label,
+.custom-input input:valid ~ label {
+  top: -9px;
+  left: -20px;
+  font-size: 0.7rem;
+}
+/* ===================== */
+
+/* Eye slash password */
+.eye-group {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.eye-group i {
+  font-size: 15px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+  color: #333;
+}
+
+.slash {
+  position: absolute;
+  width: 2px;
+  height: 0;
+  background-color: #333;
+  top: 11%;
+  left: 90%;
+  transform: translate(-50%) rotate(45deg);
+  transform-origin: top center;
+  transition: height 0.3s ease;
+  z-index: 2;
+  box-shadow: 0 0 0 1px white;
+  border-radius: 5px;
+}
+
+.eye-group.slashed .slash {
+  height: 20px;
+}
+/* ========================== */
+
+/* .input-icon {
+  position: relative;
   left: 15px;
   top: 50%;
   transform: translateY(-50%);
   color: #999;
   font-size: 18px;
-}
+} */
 
-input {
+/* input {
   width: 100%;
   padding: 14px 15px 14px 45px;
   border: 2px solid #e0e0e0;
@@ -78,15 +154,15 @@ input {
   font-size: 15px;
   transition: all 0.3s ease;
   font-family: inherit;
-}
+} */
 
-input:focus {
+/* input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
+} */
 
-.password-toggle {
+/* .password-toggle {
   position: absolute;
   right: 15px;
   top: 50%;
@@ -99,7 +175,44 @@ input:focus {
 
 .password-toggle:hover {
   color: #667eea;
-}
+} */
+
+/* .eye-group {
+  position: relative;
+  cursor: pointer;
+} */
+
+/* .eye-group i {
+  font-size: 15px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+  color: #333;
+} */
+
+/* .slash {
+  position: absolute;
+  width: 2px;
+  height: 0;
+  background-color: #333;
+  top: 0;
+  left: 100%;
+  transform: translateX(-50%) rotate(45deg);
+  transform-origin: top center;
+  transition: height 0.3s ease;
+  z-index: 2;
+  box-shadow: 0 0 0 1px white;
+  border-radius: 5px;
+} */
+
+/* .eye-group.slashed .slash {
+  height: 24px;
+} */
+
+/* .eye-group.slash i {
+  opacity: 0.6;
+} */
+
+/* ================================= */
 
 .remember-forgot {
   display: flex;
