@@ -2247,7 +2247,6 @@ function initResourcesCharts() {
   initResourcesTrendChart();
   initMaterialTypeChart();
   initUtilizationTypeChart();
-  initTopResourcesChart();
   initResourceBookerTypeChart();
   initResourceMonthlyChart();
 }
@@ -2366,46 +2365,6 @@ function initUtilizationTypeChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-    },
-  });
-}
-
-// Top Resources Chart
-function initTopResourcesChart() {
-  const ctx = document.getElementById("topResourcesChart");
-  if (charts.topResources) charts.topResources.destroy();
-
-  const resourceCounts = {};
-  filteredResources.forEach((resource) => {
-    if (resource.booked_resources_id) {
-      const resId = `Resource ${resource.booked_resources_id}`;
-      resourceCounts[resId] = (resourceCounts[resId] || 0) + 1;
-    }
-  });
-
-  const top10 = Object.entries(resourceCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
-
-  charts.topResources = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: top10.map((r) => r[0]),
-      datasets: [
-        {
-          label: "Bookings",
-          data: top10.map((r) => r[1]),
-          backgroundColor: "#f39c12",
-        },
-      ],
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-      },
     },
   });
 }
