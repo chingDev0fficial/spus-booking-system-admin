@@ -1,4 +1,6 @@
 // API Configuration
+
+// bookingsAPI
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxdkklPteUg-U0YP0YPorOU6cwTKnMGuNj9TW-BD9mw1BYVecwG96inpf29GZ4zo-dK/exec";
 const libraryAPI =
@@ -7,6 +9,8 @@ const facilityAPI =
   "https://script.google.com/macros/s/AKfycbzGMYKtuKrYu6IzYHoAfA46domoRl6MjCNgUDJtrT2OFjHnfo0eB5TVmtk3jUEqJ0UWFQ/exec";
 const resourcesAPI =
   "https://script.google.com/macros/s/AKfycbzBn1LabXAKnX8NjPUn1OrH5RSPyoHeGPIIW3WgPJ_-6rHW30XIeAWxKdTtxwJjLupp/exec";
+const updatBookingInAttributeAPI =
+  "https://script.google.com/macros/s/AKfycbzM0p43jJykkTbdtZviBXeiEIohNW-arejiuQtSXRdVKQMn5NzdvUp3RplKYgMxeiGo/exec";
 
 // Global variables
 let allBookings = [];
@@ -127,6 +131,14 @@ async function loadFacilities() {
   }
 }
 
+// Helper: returns a JSON response
+function respond(success, message) {
+  const payload = JSON.stringify({ success, message });
+  return ContentService.createTextOutput(payload).setMimeType(
+    ContentService.MimeType.JSON,
+  );
+}
+
 // Populate Library Filter Dropdown
 function populateLibraryFilter() {
   const filterLibrary = document.getElementById("filterLibrary");
@@ -169,7 +181,7 @@ function formatTime(timeString) {
         // Remove seconds if present (8:00:00 AM -> 8:00 AM)
         return timeString.replace(
           /(\d{1,2}):(\d{2}):\d{2}\s*(AM|PM)/i,
-          "$1:$2 $3"
+          "$1:$2 $3",
         );
       }
 
@@ -284,8 +296,15 @@ async function loadDashboardData() {
       booked_hour: booking.booked_hour || booking.hour || 0,
     }));
 
-    console.log("Processed bookings:", allBookings); // Debug log
-    console.log("Total bookings loaded:", allBookings.length); // Debug log
+    // allBookings.booked_reference = "BB-2026-02-17-001"
+    // allBookings.booking_name = "Booking Name"
+    // allBookings.booker_type = "Booker Type"
+    // allBookings.email = "email@example.com"
+    // allBookings.num_users = 1
+    // allBookings.name_users = "User Name"
+    // allBookings.subject_topic_purpose = "Subject Topic Purpose"
+    // allBookings.teacher_coordinator = "Teacher Coordinator"
+    // allBookings.library = "Library"
 
     filteredBookings = [...allBookings];
 
@@ -514,16 +533,16 @@ function showLoading(show) {
 function updateStats() {
   const total = filteredBookings.length;
   const completed = filteredBookings.filter(
-    (b) => b.status && b.status.toLowerCase() === "completed"
+    (b) => b.status && b.status.toLowerCase() === "completed",
   ).length;
   const pending = filteredBookings.filter(
-    (b) => !b.status || b.status.toLowerCase() === "pending"
+    (b) => !b.status || b.status.toLowerCase() === "pending",
   ).length;
   const cancelled = filteredBookings.filter(
-    (b) => b.status && b.status.toLowerCase() === "cancelled"
+    (b) => b.status && b.status.toLowerCase() === "cancelled",
   ).length;
   const uniqueUsers = new Set(
-    filteredBookings.filter((b) => b.email).map((b) => b.email)
+    filteredBookings.filter((b) => b.email).map((b) => b.email),
   ).size;
   const totalHours = filteredBookings.reduce((sum, b) => {
     const hours = parseInt(b.booked_hour) || 0;
@@ -540,24 +559,21 @@ function updateStats() {
 
   // Calculate approval rate
   const completedRate = total > 0 ? ((completed / total) * 100).toFixed(1) : 0;
-  document.getElementById(
-    "stat-completed-change"
-  ).innerHTML = `<i class="fas fa-chart-line"></i> ${completedRate}% completed rate`;
+  document.getElementById("stat-completed-change").innerHTML =
+    `<i class="fas fa-chart-line"></i> ${completedRate}% completed rate`;
 
   // Calculate rejection rate
   const cancelledRate = total > 0 ? ((cancelled / total) * 100).toFixed(1) : 0;
-  document.getElementById(
-    "stat-cancelled-change"
-  ).innerHTML = `<i class="fas fa-arrow-down"></i> ${cancelledRate}% cancelled rate`;
+  document.getElementById("stat-cancelled-change").innerHTML =
+    `<i class="fas fa-arrow-down"></i> ${cancelledRate}% cancelled rate`;
 
   // Calculate average hours
   console.log("Total:", total);
   console.log("Total Hours:", totalHours);
   const avgHours = total > 0 ? (totalHours / total).toFixed(1) : 0;
   console.log("Avg Hours:", avgHours);
-  document.getElementById(
-    "stat-hours-change"
-  ).textContent = `Avg ${avgHours} hrs/booking`;
+  document.getElementById("stat-hours-change").textContent =
+    `Avg ${avgHours} hrs/booking`;
 }
 
 // Initialize Charts
@@ -826,7 +842,7 @@ function populateBookingsTable() {
   if (filteredBookings.length === 0) {
     tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px;">
+                        <td colspan="9" style="text-align: center; padding: 40px;">
                             <div class="empty-state">
                                 <i class="fas fa-inbox"></i>
                                 <h3>No bookings found</h3>
@@ -849,6 +865,11 @@ function populateBookingsTable() {
         ? `${startTime} - ${endTime}`
         : "N/A";
     const hours = booking.booked_hour || 0;
+    const isIn =
+      booking.in === true || booking.in === "TRUE" || booking.in === "true";
+    const inBadge = isIn
+      ? `<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Yes</span>`
+      : `<span class="status-badge status-pending">No</span>`;
 
     const row = `
                     <tr>
@@ -859,9 +880,10 @@ function populateBookingsTable() {
                         <td>${formatDate(booking.date)}</td>
                         <td>${timeRange}</td>
                         <td><span class="status-badge status-${statusClass}">${
-      booking.status || "Pending"
-    }</span></td>
+                          booking.status || "Pending"
+                        }</span></td>
                         <td>${hours}h</td>
+                        <td>${inBadge}</td>
                     </tr>
                 `;
     tbody.innerHTML += row;
@@ -913,7 +935,7 @@ function applyFilters() {
           const monthAgo = new Date(
             today.getFullYear(),
             today.getMonth() - 1,
-            today.getDate()
+            today.getDate(),
           );
           if (bookingDate < monthAgo) return false;
           break;
@@ -921,7 +943,7 @@ function applyFilters() {
           const yearAgo = new Date(
             today.getFullYear() - 1,
             today.getMonth(),
-            today.getDate()
+            today.getDate(),
           );
           if (bookingDate < yearAgo) return false;
           break;
@@ -1072,7 +1094,7 @@ function populateAllBookingsTable(bookings) {
   if (bookings.length === 0) {
     tbody.innerHTML = `
                     <tr>
-                        <td colspan="11" style="text-align: center; padding: 40px;">
+                        <td colspan="13" style="text-align: center; padding: 40px;">
                             <div class="empty-state">
                                 <i class="fas fa-inbox"></i>
                                 <h3>No bookings found</h3>
@@ -1092,6 +1114,19 @@ function populateAllBookingsTable(bookings) {
       startTime && endTime && startTime !== "N/A" && endTime !== "N/A"
         ? `${startTime} - ${endTime}`
         : "N/A";
+    const isIn =
+      booking.in === true || booking.in === "TRUE" || booking.in === "true";
+    const inBadge = isIn
+      ? `<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Yes</span>`
+      : `<span class="status-badge status-pending">No</span>`;
+    const isCancelled = (booking.status || "").toLowerCase() === "cancelled";
+    const actionBtn = isCancelled
+      ? `<span class="status-badge status-cancelled" style="white-space:nowrap;"><i class="fas fa-ban"></i> Cancelled</span>`
+      : isIn
+        ? `<span class="status-badge status-completed" style="white-space:nowrap;"><i class="fas fa-check-circle"></i> Checked In</span>`
+        : `<button id="checkin-btn-${booking.id}" class="btn btn-sm btn-primary" onclick="updateBookingIn('${booking.id}')" style="white-space:nowrap;">
+           <i class="fas fa-sign-in-alt"></i> Check In
+         </button>`;
 
     const row = `
                     <tr>
@@ -1105,8 +1140,10 @@ function populateAllBookingsTable(bookings) {
                         <td>${formatDate(booking.date)}</td>
                         <td>${timeRange}</td>
                         <td><span class="status-badge status-${statusClass}">${
-      booking.status || "Pending"
-    }</span></td>
+                          booking.status || "Pending"
+                        }</span></td>
+                        <td>${inBadge}</td>
+                        <td>${actionBtn}</td>
                     </tr>
                 `;
     tbody.innerHTML += row;
@@ -1135,6 +1172,87 @@ function searchAllBookings() {
   populateAllBookingsTable(filtered);
 }
 
+// ========== CHECK-IN FEATURE ==========
+async function updateBookingIn(bookingId) {
+  const btn = document.getElementById(`checkin-btn-${bookingId}`);
+
+  try {
+    // Disable button and show loading state
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    }
+
+    // mode: 'no-cors' is required because Google Apps Script does not return
+    // CORS headers. The request still reaches and executes the script —
+    // we just cannot read the response body back (which is fine here).
+    await fetch(
+      `${updatBookingInAttributeAPI}?targetId=${encodeURIComponent(bookingId)}`,
+      { mode: "no-cors" },
+    );
+
+    // Update local data so the UI reflects the change immediately
+    const updateLocal = (list) => {
+      const booking = list.find((b) => b.id == bookingId);
+      if (booking) booking.in = true;
+    };
+    updateLocal(allBookings);
+    updateLocal(filteredBookings);
+
+    // Replace the button cell with a "Checked In" badge
+    if (btn) {
+      const row = btn.closest("tr");
+      const cell = btn.closest("td");
+
+      // Update "In" column badge first (while btn is still in the DOM)
+      if (row) {
+        const inCell = row.querySelector("td:nth-last-child(2)");
+        if (inCell) {
+          inCell.innerHTML =
+            '<span class="status-badge status-completed">' +
+            '<i class="fas fa-check-circle"></i> Yes</span>';
+        }
+      }
+
+      // Now replace the Actions cell (this removes btn from the DOM)
+      if (cell) {
+        cell.innerHTML =
+          '<span class="status-badge status-completed" style="white-space:nowrap;">' +
+          '<i class="fas fa-check-circle"></i> Checked In</span>';
+      }
+    }
+
+    showSuccess(`Booking #${bookingId} has been checked in successfully!`);
+  } catch (error) {
+    console.error("Error updating check-in status:", error);
+
+    // Restore button on failure
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Check In';
+    }
+
+    showSuccess(""); // clear any lingering success toast
+    const existingSuccess = document.getElementById("success-message");
+    if (existingSuccess) existingSuccess.remove();
+
+    // Show inline error toast
+    const errorDiv = document.createElement("div");
+    errorDiv.style.cssText = `
+      position: fixed; top: 80px; right: 20px;
+      background: #e74c3c; color: white;
+      padding: 15px 20px; border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 10000;
+    `;
+    errorDiv.innerHTML =
+      '<i class="fas fa-exclamation-circle"></i>' +
+      '<strong style="margin-left:10px;">Failed to update check-in status. Please try again.</strong>';
+    document.body.appendChild(errorDiv);
+    setTimeout(() => errorDiv.remove(), 4000);
+  }
+}
+
 // ========== LIBRARIES REPORT SECTION ==========
 function loadLibrariesSection() {
   generateLibraryStats();
@@ -1153,7 +1271,7 @@ function generateLibraryStats() {
     const count = libBookings.length;
     const hours = libBookings.reduce(
       (sum, b) => sum + (parseInt(b.booked_hour) || 0),
-      0
+      0,
     );
 
     const card = `
@@ -1175,7 +1293,7 @@ function initLibraryComparisonChart() {
   const libraryCounts = {};
   Object.keys(libraries).forEach((id) => {
     libraryCounts[libraries[id]] = filteredBookings.filter(
-      (b) => b.library == id
+      (b) => b.library == id,
     ).length;
   });
 
@@ -1249,14 +1367,14 @@ function populateLibraryDetailsTable() {
     const libBookings = filteredBookings.filter((b) => b.library == libId);
     const total = libBookings.length;
     const pending = libBookings.filter(
-      (b) => (b.status || "").toLowerCase() === "pending"
+      (b) => (b.status || "").toLowerCase() === "pending",
     ).length;
     const completed = libBookings.filter(
-      (b) => (b.status || "").toLowerCase() === "completed"
+      (b) => (b.status || "").toLowerCase() === "completed",
     ).length;
     const totalHours = libBookings.reduce(
       (sum, b) => sum + (parseInt(b.booked_hour) || 0),
-      0
+      0,
     );
     const avgHours = total > 0 ? (totalHours / total).toFixed(1) : 0;
 
@@ -1269,7 +1387,7 @@ function populateLibraryDetailsTable() {
     });
     const mostUsedFacId = Object.keys(facilityCounts).reduce(
       (a, b) => (facilityCounts[a] > facilityCounts[b] ? a : b),
-      null
+      null,
     );
     const mostUsedFac = mostUsedFacId ? getFacilityName(mostUsedFacId) : "N/A";
 
@@ -1331,12 +1449,12 @@ function calculateMonthlyStats() {
   });
   const bestMonthKey = Object.keys(monthCounts).reduce(
     (a, b) => (monthCounts[a] > monthCounts[b] ? a : b),
-    null
+    null,
   );
   const bestMonth = bestMonthKey
     ? new Date(
         bestMonthKey.split("-")[0],
-        bestMonthKey.split("-")[1]
+        bestMonthKey.split("-")[1],
       ).toLocaleString("default", { month: "short", year: "numeric" })
     : "N/A";
 
@@ -1349,7 +1467,7 @@ function calculateMonthlyStats() {
     now.toLocaleString("default", { month: "long" });
   document.getElementById("stat-last-month-change").textContent = new Date(
     now.getFullYear(),
-    now.getMonth() - 1
+    now.getMonth() - 1,
   ).toLocaleString("default", { month: "long" });
   document.getElementById("stat-growth-rate-change").innerHTML =
     growth >= 0
@@ -1410,8 +1528,8 @@ function initMonthlyStatusChart() {
   const data = statuses.map(
     (s) =>
       filteredBookings.filter(
-        (b) => (b.status || "").toLowerCase() === s.toLowerCase()
-      ).length
+        (b) => (b.status || "").toLowerCase() === s.toLowerCase(),
+      ).length,
   );
 
   charts.monthlyStatus = new Chart(ctx, {
@@ -1439,10 +1557,10 @@ function initMonthlyUserTypeChart() {
   if (charts.monthlyUserType) charts.monthlyUserType.destroy();
 
   const students = filteredBookings.filter(
-    (b) => (b.booker_type || "").toLowerCase() === "student"
+    (b) => (b.booker_type || "").toLowerCase() === "student",
   ).length;
   const faculty = filteredBookings.filter(
-    (b) => (b.booker_type || "").toLowerCase() === "faculty"
+    (b) => (b.booker_type || "").toLowerCase() === "faculty",
   ).length;
 
   charts.monthlyUserType = new Chart(ctx, {
@@ -1476,7 +1594,7 @@ function calculateAnalyticsStats() {
   const avgDuration = (
     filteredBookings.reduce(
       (sum, b) => sum + (parseInt(b.booked_hour) || 0),
-      0
+      0,
     ) / filteredBookings.length
   ).toFixed(1);
 
@@ -1489,7 +1607,7 @@ function calculateAnalyticsStats() {
   });
   const peakHour = Object.keys(hourCounts).reduce(
     (a, b) => (hourCounts[a] > hourCounts[b] ? a : b),
-    "-"
+    "-",
   );
 
   // Find top library
@@ -1501,7 +1619,7 @@ function calculateAnalyticsStats() {
   });
   const topLibId = Object.keys(libCounts).reduce(
     (a, b) => (libCounts[a] > libCounts[b] ? a : b),
-    null
+    null,
   );
   const topLib = topLibId
     ? libraries[topLibId] || `Library ${topLibId}`
@@ -1516,7 +1634,7 @@ function calculateAnalyticsStats() {
   });
   const topType = Object.keys(typeCounts).reduce(
     (a, b) => (typeCounts[a] > typeCounts[b] ? a : b),
-    "N/A"
+    "N/A",
   );
 
   document.getElementById("stat-avg-duration").textContent = avgDuration;
@@ -1689,14 +1807,14 @@ function calculateUserStats() {
 
   const totalUsers = Object.keys(users).length;
   const students = Object.values(users).filter(
-    (u) => (u.type || "").toLowerCase() === "student"
+    (u) => (u.type || "").toLowerCase() === "student",
   ).length;
   const faculty = Object.values(users).filter(
-    (u) => (u.type || "").toLowerCase() === "faculty"
+    (u) => (u.type || "").toLowerCase() === "faculty",
   ).length;
 
   const topUser = Object.entries(users).sort(
-    (a, b) => b[1].bookings.length - a[1].bookings.length
+    (a, b) => b[1].bookings.length - a[1].bookings.length,
   )[0];
 
   document.getElementById("stat-total-users").textContent = totalUsers;
@@ -1821,7 +1939,7 @@ function populateUserDetailsTable() {
     .sort((a, b) => b[1].bookings.length - a[1].bookings.length)
     .forEach(([email, user]) => {
       const lastBooking = user.bookings.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
+        (a, b) => new Date(b.date) - new Date(a.date),
       )[0];
       const row = `
                         <tr>
@@ -2020,141 +2138,6 @@ function loadSampleResourcesData() {
 
   console.log(allResources);
 
-  //   allResources = [
-  //     {
-  //       id: 1,
-  //       reference_number: "BK1766926383423",
-  //       bookers_name: "Prince Carl S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princecarlajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "books",
-  //       booked_resources_id: 1,
-  //       date: "2025-12-29",
-  //       timestamp: "12/28/2025 20:53:06",
-  //     },
-  //     {
-  //       id: 2,
-  //       reference_number: "BK1766926460983",
-  //       bookers_name: "Prince Carl S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princecarlajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "books",
-  //       booked_resources_id: 2,
-  //       date: "2025-12-29",
-  //       timestamp: "12/28/2025 20:54:24",
-  //     },
-  //     {
-  //       id: 3,
-  //       reference_number: "BK1766966858528",
-  //       bookers_name: "Princess Ann S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princessannajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "books",
-  //       booked_resources_id: 1,
-  //       date: "2025-12-29",
-  //       timestamp: "12/29/2025 8:07:41",
-  //     },
-  //     {
-  //       id: 4,
-  //       reference_number: "BK1766966905141",
-  //       bookers_name: "Prince Carl S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princecarlajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "fiction",
-  //       booked_resources_id: 4,
-  //       date: "2025-12-29",
-  //       timestamp: "12/29/2025 8:08:27",
-  //     },
-  //     {
-  //       id: 5,
-  //       reference_number: "BK1766966960509",
-  //       bookers_name: "Prince Carl S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princecarlajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "fiction",
-  //       booked_resources_id: 6,
-  //       date: "2025-12-29",
-  //       timestamp: "12/29/2025 8:09:22",
-  //     },
-  //     {
-  //       id: 6,
-  //       reference_number: "BK1766967009558",
-  //       bookers_name: "Princess Ann S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princessannajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "periodicals",
-  //       booked_resources_id: 12,
-  //       date: "2025-12-29",
-  //       timestamp: "12/29/2025 8:10:11",
-  //     },
-  //     {
-  //       id: 7,
-  //       reference_number: "BK1766967072669",
-  //       bookers_name: "Princess Ann S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princecarlajoc@gmail.com",
-  //       utilization_of_materials: "home",
-  //       type_of_materials: "fiction",
-  //       booked_resources_id: 5,
-  //       date: "2025-12-29",
-  //       timestamp: "12/29/2025 8:11:15",
-  //     },
-  //     {
-  //       id: 8,
-  //       reference_number: "BK1766967134590",
-  //       bookers_name: "Princess Ann S. Ajoc",
-  //       bookers_type: "faculty",
-  //       email: "princessannajoc@gmail.com",
-  //       utilization_of_materials: "home",
-  //       type_of_materials: "fiction",
-  //       booked_resources_id: 6,
-  //       date: "2025-12-29",
-  //       timestamp: "12/29/2025 8:12:17",
-  //     },
-  //     {
-  //       id: 9,
-  //       reference_number: "BK1766967214917",
-  //       bookers_name: "Prince Carl S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princecarlajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "fiction",
-  //       booked_resources_id: 5,
-  //       date: "2025-12-29",
-  //       timestamp: "12/29/2025 8:13:37",
-  //     },
-  //     {
-  //       id: 10,
-  //       reference_number: "BK1766967284621",
-  //       bookers_name: "Princess Ann S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princessannajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "fiction",
-  //       booked_resources_id: 5,
-  //       date: "2025-12-30",
-  //       timestamp: "12/29/2025 8:14:47",
-  //     },
-  //     {
-  //       id: 11,
-  //       reference_number: "BK1767024768024",
-  //       bookers_name: "Prince Carl S. Ajoc",
-  //       bookers_type: "student",
-  //       email: "princecarlajoc@gmail.com",
-  //       utilization_of_materials: "inside",
-  //       type_of_materials: "books",
-  //       booked_resources_id: 1,
-  //       date: "2025-12-31",
-  //       timestamp: "12/30/2025 0:12:51",
-  //     },
-  //   ];
-
   filteredResources = [...allResources];
   console.log("Sample resources data loaded:", allResources.length);
 }
@@ -2177,12 +2160,12 @@ function updateResourcesStats() {
   const homeUtilization = filteredResources.filter(
     (r) =>
       r.utilization_of_materials &&
-      r.utilization_of_materials.toLowerCase() === "home"
+      r.utilization_of_materials.toLowerCase() === "home",
   ).length;
   const insideUtilization = filteredResources.filter(
     (r) =>
       r.utilization_of_materials &&
-      r.utilization_of_materials.toLowerCase() === "inside"
+      r.utilization_of_materials.toLowerCase() === "inside",
   ).length;
 
   // Find most popular material type
@@ -2195,17 +2178,17 @@ function updateResourcesStats() {
   });
   const popularMaterial = Object.keys(materialCounts).reduce(
     (a, b) => (materialCounts[a] > materialCounts[b] ? a : b),
-    null
+    null,
   );
 
   // Unique users
   const uniqueUsers = new Set(
-    filteredResources.filter((r) => r.email).map((r) => r.email)
+    filteredResources.filter((r) => r.email).map((r) => r.email),
   ).size;
 
   // Student bookings
   const studentBookings = filteredResources.filter(
-    (r) => r.bookers_type && r.bookers_type.toLowerCase() === "student"
+    (r) => r.bookers_type && r.bookers_type.toLowerCase() === "student",
   ).length;
 
   // Update stat values
@@ -2228,18 +2211,15 @@ function updateResourcesStats() {
   const studentPercent =
     total > 0 ? ((studentBookings / total) * 100).toFixed(1) : 0;
 
-  document.getElementById(
-    "stat-home-utilization-change"
-  ).textContent = `${homePercent}% of total`;
-  document.getElementById(
-    "stat-inside-utilization-change"
-  ).textContent = `${insidePercent}% of total`;
+  document.getElementById("stat-home-utilization-change").textContent =
+    `${homePercent}% of total`;
+  document.getElementById("stat-inside-utilization-change").textContent =
+    `${insidePercent}% of total`;
   document.getElementById("stat-popular-material-change").textContent = `${
     materialCounts[popularMaterial] || 0
   } bookings`;
-  document.getElementById(
-    "stat-student-resources-change"
-  ).textContent = `${studentPercent}% of total`;
+  document.getElementById("stat-student-resources-change").textContent =
+    `${studentPercent}% of total`;
 }
 
 // Initialize Resources Charts
@@ -2309,7 +2289,7 @@ function initMaterialTypeChart() {
   });
 
   const labels = Object.keys(materialCounts).map(
-    (m) => m.charAt(0).toUpperCase() + m.slice(1)
+    (m) => m.charAt(0).toUpperCase() + m.slice(1),
   );
 
   charts.materialType = new Chart(ctx, {
@@ -2348,7 +2328,7 @@ function initUtilizationTypeChart() {
   });
 
   const labels = Object.keys(utilizationCounts).map(
-    (u) => u.charAt(0).toUpperCase() + u.slice(1)
+    (u) => u.charAt(0).toUpperCase() + u.slice(1),
   );
 
   charts.utilizationType = new Chart(ctx, {
@@ -2381,7 +2361,7 @@ function initResourceBookerTypeChart() {
   });
 
   const labels = Object.keys(typeCounts).map(
-    (t) => t.charAt(0).toUpperCase() + t.slice(1)
+    (t) => t.charAt(0).toUpperCase() + t.slice(1),
   );
 
   charts.resourceBookerType = new Chart(ctx, {
