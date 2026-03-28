@@ -11,6 +11,8 @@ const resourcesAPI =
   "https://script.google.com/macros/s/AKfycbzBn1LabXAKnX8NjPUn1OrH5RSPyoHeGPIIW3WgPJ_-6rHW30XIeAWxKdTtxwJjLupp/exec";
 const updatBookingInAttributeAPI =
   "https://script.google.com/macros/s/AKfycbzM0p43jJykkTbdtZviBXeiEIohNW-arejiuQtSXRdVKQMn5NzdvUp3RplKYgMxeiGo/exec";
+const departmentAPI =
+  "https://script.google.com/macros/s/AKfycbz7S5YB2NT7xVEd9xOvP_QiFnfsYhrS957WrNXOoSBeGrOpT-n4EZgxzF53oSxp97Y6/exec";
 
 // Global variables
 let allBookings = [];
@@ -20,10 +22,21 @@ let filteredResources = [];
 let charts = {};
 let libraries = {};
 let facilities = {};
+let departments = {};
 let currentSection = "overview";
 let autoRefreshInterval = null;
 let lastUpdateTime = null;
 let isAutoRefreshEnabled = false;
+const COLLEGE_LIBRARY_NAME = "college library";
+
+function normalizeLookupId(value) {
+  if (value === undefined || value === null) return "";
+  return String(value).trim();
+}
+
+function normalizeText(value) {
+  return normalizeLookupId(value).toLowerCase();
+}
 
 // Initialize Dashboard
 document.addEventListener("DOMContentLoaded", async function () {
@@ -47,13 +60,17 @@ async function initializeDashboard() {
 
   try {
     // Load libraries and facilities first
-    await Promise.all([loadLibraries(), loadFacilities()]);
+    await Promise.all([loadLibraries(), loadFacilities(), loadDepartments()]);
 
     // Then load bookings
     await loadDashboardData();
 
+    // Populate department filter dropdown
+    populateDepartmentFilter();
+
     // Populate library filter dropdown
     populateLibraryFilter();
+    updateDepartmentFilterVisibility();
   } catch (error) {
     console.error("Error initializing dashboard:", error);
     showError("Error loading dashboard. Please refresh the page.");
@@ -131,6 +148,47 @@ async function loadFacilities() {
   }
 }
 
+// Load Departments
+async function loadDepartments() {
+  try {
+    const response = await fetch(departmentAPI);
+    if (!response.ok) {
+      throw new Error("Failed to fetch departments");
+    }
+
+    const data = await response.json();
+    console.log("Departments API Response:", data);
+
+    let departmentsData = [];
+    if (data.status === "success" && data.data) {
+      departmentsData = Array.isArray(data.data) ? data.data : [data.data];
+    } else if (Array.isArray(data)) {
+      departmentsData = data;
+    }
+
+    departments = {};
+    departmentsData.forEach((department) => {
+      const id = normalizeLookupId(
+        department.id || department.department_id || department.dept_id,
+      );
+      const name =
+        department.name ||
+        department.department_name ||
+        department.department ||
+        department.dept_name;
+
+      if (id && name) {
+        departments[id] = String(name).trim();
+      }
+    });
+
+    console.log("Departments loaded:", departments);
+  } catch (error) {
+    console.error("Error loading departments:", error);
+    // Continue even if departments fail to load
+  }
+}
+
 // Helper: returns a JSON response
 function respond(success, message) {
   const payload = JSON.stringify({ success, message });
@@ -142,6 +200,8 @@ function respond(success, message) {
 // Populate Library Filter Dropdown
 function populateLibraryFilter() {
   const filterLibrary = document.getElementById("filterLibrary");
+  if (!filterLibrary) return;
+  const currentSelection = filterLibrary.value;
 
   // Clear existing options except "All Libraries"
   filterLibrary.innerHTML = '<option value="">All Libraries</option>';
@@ -155,6 +215,129 @@ function populateLibraryFilter() {
       option.textContent = libraries[id];
       filterLibrary.appendChild(option);
     });
+
+  const hasCurrentSelection = Array.from(filterLibrary.options).some(
+    (option) => option.value === currentSelection,
+  );
+  filterLibrary.value = hasCurrentSelection ? currentSelection : "";
+}
+
+function formatDepartmentDisplayName(name) {
+  const text = String(name || "").trim();
+  if (!text) return "";
+  const match = text.match(/^([^()]+?)\s*\(([^()]+)\)\s*$/);
+  if (!match) return text;
+  return `${match[1].trim()} (${match[2].trim()})`;
+}
+
+function isCollegeDepartmentOption(name) {
+  const text = String(name || "").trim();
+  if (!text) return false;
+
+  // Keep only departments that already provide "(...)" detail,
+  // e.g. "CEIT (College of Engineering and Technology)".
+  return /\([^)]+\)/.test(text);
+}
+
+function populateDepartmentFilter() {
+  const filterDepartment = document.getElementById("filterDepartment");
+  if (!filterDepartment) return;
+
+  const currentSelection = filterDepartment.value;
+  filterDepartment.innerHTML = '<option value="">All Departments</option>';
+
+  Object.keys(departments)
+    .sort((a, b) =>
+      String(departments[a]).localeCompare(String(departments[b])),
+    )
+    .forEach((id) => {
+      if (!isCollegeDepartmentOption(departments[id])) {
+        return;
+      }
+
+      const option = document.createElement("option");
+      option.value = id;
+      option.textContent = formatDepartmentDisplayName(departments[id]);
+      filterDepartment.appendChild(option);
+    });
+
+  const hasCurrentSelection = Array.from(filterDepartment.options).some(
+    (option) => option.value === currentSelection,
+  );
+  filterDepartment.value = hasCurrentSelection ? currentSelection : "";
+}
+
+function isCollegeLibrarySelected() {
+  const selectedLibrary = document.getElementById("filterLibrary")?.value || "";
+  if (!selectedLibrary) return false;
+
+  const selectedLibraryName = libraries[selectedLibrary] || "";
+  return normalizeText(selectedLibraryName) === COLLEGE_LIBRARY_NAME;
+}
+
+function updateDepartmentFilterVisibility() {
+  const departmentGroup = document.getElementById("filterDepartmentGroup");
+  const filterDepartment = document.getElementById("filterDepartment");
+  if (!departmentGroup || !filterDepartment) return;
+
+  const shouldShow = isCollegeLibrarySelected();
+  departmentGroup.style.display = shouldShow ? "" : "none";
+
+  if (!shouldShow) {
+    filterDepartment.value = "";
+  }
+}
+
+function onLibraryFilterChange() {
+  updateDepartmentFilterVisibility();
+  applyFilters();
+}
+
+function onDepartmentFilterChange() {
+  applyFilters();
+}
+
+function getActiveFilterValues() {
+  return {
+    library: document.getElementById("filterLibrary").value || "",
+    department: document.getElementById("filterDepartment")?.value || "",
+    dateRange: document.getElementById("filterDateRange").value || "month",
+    status: document.getElementById("filterStatus").value || "",
+    bookerType: document.getElementById("filterBookerType").value || "",
+  };
+}
+
+function restoreActiveFilterValues(filters) {
+  if (!filters) return;
+
+  const filterLibrary = document.getElementById("filterLibrary");
+  const filterDepartment = document.getElementById("filterDepartment");
+  const filterDateRange = document.getElementById("filterDateRange");
+  const filterStatus = document.getElementById("filterStatus");
+  const filterBookerType = document.getElementById("filterBookerType");
+
+  if (filterLibrary) {
+    const hasLibraryOption = Array.from(filterLibrary.options).some(
+      (option) => option.value === filters.library,
+    );
+    filterLibrary.value = hasLibraryOption ? filters.library : "";
+  }
+
+  updateDepartmentFilterVisibility();
+
+  if (filterDepartment) {
+    const hasDepartmentOption = Array.from(filterDepartment.options).some(
+      (option) => option.value === filters.department,
+    );
+    filterDepartment.value =
+      isCollegeLibrarySelected() && hasDepartmentOption
+        ? filters.department
+        : "";
+  }
+
+  if (filterDateRange) filterDateRange.value = filters.dateRange || "month";
+  if (filterStatus) filterStatus.value = filters.status || "";
+  if (filterBookerType) filterBookerType.value = filters.bookerType || "";
 }
 
 // Get Library Name
@@ -286,6 +469,14 @@ async function loadDashboardData() {
       subject_topic_purpose: booking.subject_topic_purpose,
       teacher_coordinator: booking.teacher_coordinator,
       library: booking.library,
+      department: normalizeLookupId(
+        booking.department ||
+          booking.department_id ||
+          booking.dept ||
+          booking.dept_id ||
+          booking.department_name ||
+          booking.dept_name,
+      ),
       facility: booking.facility,
       date: booking.date,
       start_time: booking.start_time,
@@ -306,12 +497,9 @@ async function loadDashboardData() {
     // allBookings.teacher_coordinator = "Teacher Coordinator"
     // allBookings.library = "Library"
 
+    // Always render through active UI filters to avoid showing unfiltered data
     filteredBookings = [...allBookings];
-
-    // Update dashboard with real data
-    updateStats();
-    initializeCharts();
-    populateBookingsTable();
+    applyFilters();
 
     showLoading(false);
   } catch (error) {
@@ -333,6 +521,7 @@ function startAutoRefresh() {
   // Auto-refresh every 30 seconds
   autoRefreshInterval = setInterval(async () => {
     console.log("Auto-refreshing data...");
+    const activeFilters = getActiveFilterValues();
 
     // Update status indicator to show refreshing
     const statusIndicator = document.getElementById("status-indicator");
@@ -343,6 +532,11 @@ function startAutoRefresh() {
     await loadDashboardData();
     await loadLibraries();
     await loadFacilities();
+    await loadDepartments();
+    populateDepartmentFilter();
+    populateLibraryFilter();
+    restoreActiveFilterValues(activeFilters);
+    applyFilters();
 
     // Update last update time
     lastUpdateTime = new Date();
@@ -423,7 +617,7 @@ function updateLastUpdateDisplay() {
 }
 
 // Manual Refresh Function
-async function refreshData() {
+async function refreshDataWithStatus() {
   console.log("Manual refresh triggered");
 
   // Disable button during refresh
@@ -441,9 +635,15 @@ async function refreshData() {
   }
 
   try {
+    const activeFilters = getActiveFilterValues();
     await loadDashboardData();
     await loadLibraries();
     await loadFacilities();
+    await loadDepartments();
+    populateDepartmentFilter();
+    populateLibraryFilter();
+    restoreActiveFilterValues(activeFilters);
+    applyFilters();
 
     // Update last update time
     lastUpdateTime = new Date();
@@ -893,28 +1093,40 @@ function populateBookingsTable() {
 // Apply Filters
 function applyFilters() {
   const library = document.getElementById("filterLibrary").value;
+  const department = document.getElementById("filterDepartment")?.value || "";
   const dateRange = document.getElementById("filterDateRange").value;
   const status = document.getElementById("filterStatus").value;
   const bookerType = document.getElementById("filterBookerType").value;
 
   filteredBookings = allBookings.filter((booking) => {
     // Library filter
-    if (library && booking.library && booking.library.toString() !== library)
-      return false;
+    if (library && String(booking.library ?? "") !== library) return false;
+
+    // Department filter (College Library only)
+    if (isCollegeLibrarySelected() && department) {
+      const bookingDepartmentId = normalizeLookupId(booking.department);
+      const selectedDepartmentName = normalizeText(departments[department]);
+      const bookingDepartmentName = normalizeText(booking.department);
+      const matchesDepartment =
+        bookingDepartmentId === department ||
+        (selectedDepartmentName &&
+          bookingDepartmentName === selectedDepartmentName);
+
+      if (!matchesDepartment) return false;
+    }
 
     // Status filter (case-insensitive)
     if (
       status &&
-      booking.status &&
-      booking.status.toLowerCase() !== status.toLowerCase()
+      (!booking.status || booking.status.toLowerCase() !== status.toLowerCase())
     )
       return false;
 
     // Booker type filter (case-insensitive)
     if (
       bookerType &&
-      booking.booker_type &&
-      booking.booker_type.toLowerCase() !== bookerType.toLowerCase()
+      (!booking.booker_type ||
+        booking.booker_type.toLowerCase() !== bookerType.toLowerCase())
     )
       return false;
 
@@ -961,6 +1173,11 @@ function applyFilters() {
 // Reset Filters
 function resetFilters() {
   document.getElementById("filterLibrary").value = "";
+  const filterDepartment = document.getElementById("filterDepartment");
+  if (filterDepartment) {
+    filterDepartment.value = "";
+  }
+  updateDepartmentFilterVisibility();
   document.getElementById("filterDateRange").value = "month";
   document.getElementById("filterStatus").value = "";
   document.getElementById("filterBookerType").value = "";
@@ -1969,21 +2186,27 @@ function searchUsers() {
 
 // Refresh Data
 async function refreshData() {
-  const btn = event.target.closest("button");
-  const icon = btn.querySelector("i");
+  const activeFilters = getActiveFilterValues();
+  const btn = event?.target?.closest("button");
+  const icon = btn ? btn.querySelector("i") : null;
 
-  // Add spinning animation
-  icon.classList.add("fa-spin");
-  btn.disabled = true;
+  if (icon) icon.classList.add("fa-spin");
+  if (btn) btn.disabled = true;
 
   try {
     await loadDashboardData();
+    await loadLibraries();
+    await loadFacilities();
+    await loadDepartments();
+    populateDepartmentFilter();
+    populateLibraryFilter();
+    restoreActiveFilterValues(activeFilters);
+    applyFilters();
   } catch (error) {
     console.error("Error refreshing data:", error);
   } finally {
-    // Remove spinning animation
-    icon.classList.remove("fa-spin");
-    btn.disabled = false;
+    if (icon) icon.classList.remove("fa-spin");
+    if (btn) btn.disabled = false;
   }
 }
 

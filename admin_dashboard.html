@@ -121,8 +121,19 @@
         <div class="filters-row">
           <div class="filter-group">
             <label>Library</label>
-            <select id="filterLibrary" onchange="applyFilters()">
+            <select id="filterLibrary" onchange="onLibraryFilterChange()">
               <option value="">All Libraries</option>
+              <!-- Options will be populated dynamically from API -->
+            </select>
+          </div>
+          <div
+            class="filter-group"
+            id="filterDepartmentGroup"
+            style="display: none"
+          >
+            <label>Department</label>
+            <select id="filterDepartment" onchange="onDepartmentFilterChange()">
+              <option value="">All Departments</option>
               <!-- Options will be populated dynamically from API -->
             </select>
           </div>
