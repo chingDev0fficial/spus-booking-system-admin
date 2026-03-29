@@ -1220,11 +1220,35 @@ function setupNavigation() {
   navLinks.forEach((link) => {
     link.addEventListener("click", function (e) {
       e.preventDefault();
-      navLinks.forEach((l) => l.classList.remove("active"));
+      const toggleTarget = this.dataset.toggle;
+      if (toggleTarget) {
+        const submenu = document.getElementById(toggleTarget);
+        const parentItem = this.closest(".nav-item-has-children");
+        if (submenu) {
+          submenu.classList.toggle("open");
+        }
+        if (parentItem) {
+          parentItem.classList.toggle("open");
+        }
+        return;
+      }
+
+      navLinks.forEach((l) => {
+        if (!l.dataset.toggle) {
+          l.classList.remove("active");
+        }
+      });
       this.classList.add("active");
 
       const section = this.dataset.section;
       switchSection(section);
+
+      if (section === "resources-inside" || section === "resources-home") {
+        const resourcesSubmenu = document.getElementById("resources-submenu");
+        const resourcesNavItem = document.getElementById("resources-nav-item");
+        if (resourcesSubmenu) resourcesSubmenu.classList.add("open");
+        if (resourcesNavItem) resourcesNavItem.classList.add("open");
+      }
     });
   });
 }
@@ -1268,6 +1292,12 @@ function switchSection(section) {
     case "resources":
       loadResourcesSection();
       break;
+    case "resources-inside":
+      loadReadingPageSection("inside");
+      break;
+    case "resources-home":
+      loadReadingPageSection("home");
+      break;
   }
 }
 
@@ -1281,6 +1311,8 @@ function updateSectionTitle(section) {
     analytics: "Advanced Analytics",
     users: "User Statistics",
     resources: "Resource Management",
+    "resources-inside": "Inside Reading Reports",
+    "resources-home": "Take-home Reading Reports",
   };
 
   const subtitles = {
@@ -1291,6 +1323,8 @@ function updateSectionTitle(section) {
     analytics: "Deep dive into booking patterns",
     users: "User behavior and statistics",
     resources: "Resource usage and availability",
+    "resources-inside": "Resource statistics focused on inside reading",
+    "resources-home": "Resource statistics focused on take-home reading",
   };
 
   document.getElementById("section-title").textContent =
@@ -2280,6 +2314,34 @@ function formatDate(dateStr) {
   }
 }
 
+function formatDateTime(dateTimeStr) {
+  if (!dateTimeStr) return "N/A";
+  try {
+    const date = new Date(dateTimeStr);
+    if (isNaN(date.getTime())) return dateTimeStr;
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch (e) {
+    return dateTimeStr;
+  }
+}
+
+function getResourceDisplayId(resource) {
+  return (
+    resource.booked_resources_id ||
+    resource.resource_id ||
+    resource.id ||
+    resource.ID ||
+    "N/A"
+  );
+}
+
 // function
 
 // Logout
@@ -2323,7 +2385,11 @@ async function loadResourcesData() {
       utilization_of_materials:
         resource.utilization_of_materials || resource.utilization,
       type_of_materials: resource.type_of_materials || resource.material_type,
-      booked_resources_id: resource.booked_resources_id || resource.resource_id,
+      booked_resources_id:
+        resource.booked_resources_id ||
+        resource.resource_id ||
+        resource.id ||
+        resource.ID,
       date: resource.date,
       timestamp: resource.timestamp,
     }));
@@ -2375,20 +2441,433 @@ async function loadResourcesSection() {
   updateResourcesStats();
   initResourcesCharts();
   populateResourcesTable();
+  const reportTypeSelect = document.getElementById("readingReportTypeSelect");
+  if (reportTypeSelect && !reportTypeSelect.value) {
+    reportTypeSelect.value = "inside";
+  }
+  const reportsPanel = document.getElementById("resourceReadingReportsPanel");
+  if (reportsPanel) {
+    reportsPanel.style.display = "block";
+  }
+  updateReadingReportDetails();
+}
+
+function getUtilizationCategory(resource) {
+  const utilization = String(resource.utilization_of_materials || "")
+    .trim()
+    .toLowerCase();
+
+  if (
+    utilization === "home" ||
+    utilization === "take home" ||
+    utilization === "take-home"
+  ) {
+    return "home";
+  }
+
+  if (utilization === "inside" || utilization === "inside reading") {
+    return "inside";
+  }
+
+  return "unknown";
+}
+
+function closeReadingReportsPanel() {
+  const panel = document.getElementById("resourceReadingReportsPanel");
+  if (panel) {
+    panel.style.display = "none";
+  }
+}
+
+function openReadingReports(mode) {
+  const panel = document.getElementById("resourceReadingReportsPanel");
+  const typeSelect = document.getElementById("readingReportTypeSelect");
+  if (!panel || !typeSelect) return;
+
+  if (mode === "inside" || mode === "home") {
+    typeSelect.value = mode;
+  }
+
+  panel.style.display = "block";
+  updateReadingReportDetails();
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function updateReadingReportDetails() {
+  const panel = document.getElementById("resourceReadingReportsPanel");
+  const typeSelect = document.getElementById("readingReportTypeSelect");
+  if (!panel || !typeSelect) return;
+
+  const selectedType = typeSelect.value === "home" ? "home" : "inside";
+  const selectedLabel =
+    selectedType === "inside" ? "Inside Reading" : "Home Reading";
+
+  const selectedResources = filteredResources.filter(
+    (resource) => getUtilizationCategory(resource) === selectedType,
+  );
+
+  const selectedTotal = selectedResources.length;
+  const overallTotal = filteredResources.length;
+  const selectedPercent =
+    overallTotal > 0
+      ? ((selectedTotal / overallTotal) * 100).toFixed(1)
+      : "0.0";
+
+  const selectedUsers = new Set(
+    selectedResources.filter((r) => r.email).map((r) => r.email),
+  ).size;
+
+  const selectedStudents = selectedResources.filter(
+    (r) => String(r.bookers_type || "").toLowerCase() === "student",
+  ).length;
+  const selectedFaculty = selectedResources.filter(
+    (r) => String(r.bookers_type || "").toLowerCase() === "faculty",
+  ).length;
+  const studentPercent =
+    selectedTotal > 0
+      ? ((selectedStudents / selectedTotal) * 100).toFixed(1)
+      : "0.0";
+  const facultyPercent =
+    selectedTotal > 0
+      ? ((selectedFaculty / selectedTotal) * 100).toFixed(1)
+      : "0.0";
+
+  const materialCounts = {};
+  selectedResources.forEach((r) => {
+    const material = String(r.type_of_materials || "").trim() || "Unknown";
+    materialCounts[material] = (materialCounts[material] || 0) + 1;
+  });
+
+  const topMaterial = Object.keys(materialCounts).reduce(
+    (a, b) => (materialCounts[a] > materialCounts[b] ? a : b),
+    null,
+  );
+  const topMaterialCount = topMaterial ? materialCounts[topMaterial] : 0;
+
+  document.getElementById("resourceReadingReportsTitle").textContent =
+    `${selectedLabel} Reports`;
+  document.getElementById("reading-report-total").textContent = selectedTotal;
+  document.getElementById("reading-report-percent").textContent =
+    `${selectedPercent}% of total`;
+  document.getElementById("reading-report-users").textContent = selectedUsers;
+  document.getElementById("reading-report-students").textContent =
+    selectedStudents;
+  document.getElementById("reading-report-students-percent").textContent =
+    `${studentPercent}% of selected`;
+  document.getElementById("reading-report-faculty").textContent =
+    selectedFaculty;
+  document.getElementById("reading-report-faculty-percent").textContent =
+    `${facultyPercent}% of selected`;
+  document.getElementById("reading-report-top-material").textContent =
+    topMaterial || "N/A";
+  document.getElementById("reading-report-top-material-count").textContent =
+    `${topMaterialCount} reports`;
+}
+
+async function loadReadingPageSection(mode) {
+  if (allResources.length === 0) {
+    await loadResourcesData();
+  }
+
+  const selectedMode = mode === "home" ? "home" : "inside";
+  const selectedResources = allResources.filter(
+    (resource) => getUtilizationCategory(resource) === selectedMode,
+  );
+
+  renderReadingPageStats(selectedMode, selectedResources);
+  renderReadingPageCharts(selectedMode, selectedResources);
+  populateReadingPageTable(selectedMode, selectedResources);
+}
+
+function renderReadingPageStats(mode, resourcesList) {
+  const prefix = mode === "home" ? "home-page" : "inside-page";
+  const totalSelected = resourcesList.length;
+  const totalAll = allResources.length;
+  const selectedPercent =
+    totalAll > 0 ? ((totalSelected / totalAll) * 100).toFixed(1) : "0.0";
+
+  const uniqueUsers = new Set(
+    resourcesList.filter((r) => r.email).map((r) => r.email),
+  ).size;
+  const students = resourcesList.filter(
+    (r) => String(r.bookers_type || "").toLowerCase() === "student",
+  ).length;
+  const faculty = resourcesList.filter(
+    (r) => String(r.bookers_type || "").toLowerCase() === "faculty",
+  ).length;
+  const studentPercent =
+    totalSelected > 0 ? ((students / totalSelected) * 100).toFixed(1) : "0.0";
+  const facultyPercent =
+    totalSelected > 0 ? ((faculty / totalSelected) * 100).toFixed(1) : "0.0";
+
+  const materialCounts = {};
+  resourcesList.forEach((r) => {
+    const material = String(r.type_of_materials || "").trim() || "Unknown";
+    materialCounts[material] = (materialCounts[material] || 0) + 1;
+  });
+  const topMaterial = Object.keys(materialCounts).reduce(
+    (a, b) => (materialCounts[a] > materialCounts[b] ? a : b),
+    null,
+  );
+
+  document.getElementById(`${prefix}-total`).textContent = totalSelected;
+  document.getElementById(`${prefix}-total-change`).textContent =
+    `${selectedPercent}% of all resources`;
+  document.getElementById(`${prefix}-users`).textContent = uniqueUsers;
+  document.getElementById(`${prefix}-students`).textContent = students;
+  document.getElementById(`${prefix}-students-change`).textContent =
+    `${studentPercent}% of selected`;
+  document.getElementById(`${prefix}-faculty`).textContent = faculty;
+  document.getElementById(`${prefix}-faculty-change`).textContent =
+    `${facultyPercent}% of selected`;
+  document.getElementById(`${prefix}-top-material`).textContent =
+    topMaterial || "N/A";
+  document.getElementById(`${prefix}-top-material-change`).textContent = `${
+    materialCounts[topMaterial] || 0
+  } reports`;
+}
+
+function populateReadingPageTable(mode, resourcesList) {
+  const tbodyId = mode === "home" ? "homeResourcesTableBody" : "insideResourcesTableBody";
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (resourcesList.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align: center; padding: 40px;">
+          <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No reading records found</h3>
+            <p>No data available</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  resourcesList.slice(0, 50).forEach((resource) => {
+    const utilizationBadge =
+      mode === "home"
+        ? '<span class="status-badge status-completed">Home</span>'
+        : '<span class="status-badge status-pending">Inside</span>';
+
+    const row = `
+      <tr>
+        <td>${resource.reference_number || "N/A"}</td>
+        <td>${resource.bookers_name || "N/A"}</td>
+        <td>${resource.bookers_type || "N/A"}</td>
+        <td>${resource.email || "N/A"}</td>
+        <td><strong>${resource.type_of_materials || "N/A"}</strong></td>
+        <td>${utilizationBadge}</td>
+        <td>${getResourceDisplayId(resource)}</td>
+        <td>${formatDate(resource.date)}</td>
+        <td>${formatDateTime(resource.timestamp)}</td>
+      </tr>
+    `;
+    tbody.innerHTML += row;
+  });
+}
+
+function renderReadingPageCharts(mode, resourcesList) {
+  initReadingTrendChart(mode, resourcesList);
+  initReadingMaterialBarChart(mode, resourcesList);
+  initReadingBookerTypeChart(mode, resourcesList);
+}
+
+function initReadingTrendChart(mode, resourcesList) {
+  const chartId = mode === "home" ? "homeTrendChart" : "insideTrendChart";
+  const chartKey = mode === "home" ? "homeReadingTrend" : "insideReadingTrend";
+  const ctx = document.getElementById(chartId);
+  if (!ctx) return;
+
+  if (charts[chartKey]) charts[chartKey].destroy();
+
+  const byDate = {};
+  resourcesList.forEach((resource) => {
+    if (resource.date) {
+      const dateKey = resource.date;
+      byDate[dateKey] = (byDate[dateKey] || 0) + 1;
+    }
+  });
+
+  const rawDates = Object.keys(byDate).sort();
+  const labels = rawDates.map((dateStr) => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  });
+  const values = rawDates.map((date) => byDate[date]);
+
+  charts[chartKey] = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: mode === "home" ? "Take-home Reports" : "Inside Reports",
+          data: values,
+          borderColor: mode === "home" ? "#27ae60" : "#9b59b6",
+          backgroundColor:
+            mode === "home"
+              ? "rgba(39, 174, 96, 0.12)"
+              : "rgba(155, 89, 182, 0.12)",
+          tension: 0.35,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+    },
+  });
+}
+
+function initReadingMaterialBarChart(mode, resourcesList) {
+  const chartId =
+    mode === "home" ? "homeMaterialBarChart" : "insideMaterialBarChart";
+  const chartKey =
+    mode === "home" ? "homeReadingMaterialBar" : "insideReadingMaterialBar";
+  const ctx = document.getElementById(chartId);
+  if (!ctx) return;
+
+  if (charts[chartKey]) charts[chartKey].destroy();
+
+  const materialCounts = {};
+  resourcesList.forEach((resource) => {
+    const material = String(resource.type_of_materials || "").trim() || "Unknown";
+    materialCounts[material] = (materialCounts[material] || 0) + 1;
+  });
+
+  const entries = Object.entries(materialCounts).sort((a, b) => b[1] - a[1]);
+  const labels = entries.map(([name]) => name);
+  const values = entries.map(([, count]) => count);
+
+  charts[chartKey] = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Reports",
+          data: values,
+          backgroundColor: mode === "home" ? "#27ae60" : "#9b59b6",
+          borderRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 },
+        },
+      },
+    },
+  });
+}
+
+function initReadingBookerTypeChart(mode, resourcesList) {
+  const chartId = mode === "home" ? "homeBookerChart" : "insideBookerChart";
+  const chartKey = mode === "home" ? "homeReadingBooker" : "insideReadingBooker";
+  const ctx = document.getElementById(chartId);
+  if (!ctx) return;
+
+  if (charts[chartKey]) charts[chartKey].destroy();
+
+  const typeCounts = {
+    Student: 0,
+    Faculty: 0,
+    Other: 0,
+  };
+
+  resourcesList.forEach((resource) => {
+    const type = String(resource.bookers_type || "").toLowerCase();
+    if (type === "student") typeCounts.Student += 1;
+    else if (type === "faculty") typeCounts.Faculty += 1;
+    else typeCounts.Other += 1;
+  });
+
+  const labels = Object.keys(typeCounts).filter((key) => typeCounts[key] > 0);
+  const values = labels.map((key) => typeCounts[key]);
+
+  charts[chartKey] = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: labels.map((label) => {
+            if (label === "Student") return "#3498db";
+            if (label === "Faculty") return "#e67e22";
+            return "#95a5a6";
+          }),
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+}
+
+function searchReadingResources(mode) {
+  const selectedMode = mode === "home" ? "home" : "inside";
+  const inputId =
+    selectedMode === "home" ? "homeSearchResourcesInput" : "insideSearchResourcesInput";
+  const searchInput = document.getElementById(inputId);
+  const searchTerm = String(searchInput?.value || "").toLowerCase();
+
+  const baseResources = allResources.filter(
+    (resource) => getUtilizationCategory(resource) === selectedMode,
+  );
+
+  if (!searchTerm) {
+    renderReadingPageStats(selectedMode, baseResources);
+    renderReadingPageCharts(selectedMode, baseResources);
+    populateReadingPageTable(selectedMode, baseResources);
+    return;
+  }
+
+  const filtered = baseResources.filter((resource) => {
+    const reference = (resource.reference_number || "").toLowerCase();
+    const name = (resource.bookers_name || "").toLowerCase();
+    const email = (resource.email || "").toLowerCase();
+    const material = (resource.type_of_materials || "").toLowerCase();
+    const utilization = (resource.utilization_of_materials || "").toLowerCase();
+
+    return (
+      reference.includes(searchTerm) ||
+      name.includes(searchTerm) ||
+      email.includes(searchTerm) ||
+      material.includes(searchTerm) ||
+      utilization.includes(searchTerm)
+    );
+  });
+
+  renderReadingPageStats(selectedMode, filtered);
+  renderReadingPageCharts(selectedMode, filtered);
+  populateReadingPageTable(selectedMode, filtered);
 }
 
 // Update Resources Statistics
 function updateResourcesStats() {
   const total = filteredResources.length;
   const homeUtilization = filteredResources.filter(
-    (r) =>
-      r.utilization_of_materials &&
-      r.utilization_of_materials.toLowerCase() === "home",
+    (r) => getUtilizationCategory(r) === "home",
   ).length;
   const insideUtilization = filteredResources.filter(
-    (r) =>
-      r.utilization_of_materials &&
-      r.utilization_of_materials.toLowerCase() === "inside",
+    (r) => getUtilizationCategory(r) === "inside",
   ).length;
 
   // Find most popular material type
@@ -2425,6 +2904,10 @@ function updateResourcesStats() {
   document.getElementById("stat-resource-users").textContent = uniqueUsers;
   document.getElementById("stat-student-resources").textContent =
     studentBookings;
+  document.getElementById("stat-inside-reading-reports").textContent =
+    insideUtilization;
+  document.getElementById("stat-take-home-reading-reports").textContent =
+    homeUtilization;
 
   // Update stat changes
   const homePercent =
@@ -2443,6 +2926,10 @@ function updateResourcesStats() {
   } bookings`;
   document.getElementById("stat-student-resources-change").textContent =
     `${studentPercent}% of total`;
+  document.getElementById("stat-inside-reading-reports-change").textContent =
+    `${insidePercent}% of total`;
+  document.getElementById("stat-take-home-reading-reports-change").textContent =
+    `${homePercent}% of total`;
 }
 
 // Initialize Resources Charts
@@ -2544,15 +3031,22 @@ function initUtilizationTypeChart() {
   const ctx = document.getElementById("utilizationTypeChart");
   if (charts.utilizationType) charts.utilizationType.destroy();
 
-  const utilizationCounts = {};
+  const utilizationCounts = {
+    Home: 0,
+    Inside: 0,
+    Unknown: 0,
+  };
   filteredResources.forEach((resource) => {
-    const utilization = resource.utilization_of_materials || "Unknown";
-    utilizationCounts[utilization] = (utilizationCounts[utilization] || 0) + 1;
+    const category = getUtilizationCategory(resource);
+    if (category === "home") utilizationCounts.Home += 1;
+    else if (category === "inside") utilizationCounts.Inside += 1;
+    else utilizationCounts.Unknown += 1;
   });
 
-  const labels = Object.keys(utilizationCounts).map(
-    (u) => u.charAt(0).toUpperCase() + u.slice(1),
+  const labels = Object.keys(utilizationCounts).filter(
+    (key) => utilizationCounts[key] > 0,
   );
+  const values = labels.map((key) => utilizationCounts[key]);
 
   charts.utilizationType = new Chart(ctx, {
     type: "pie",
@@ -2560,8 +3054,12 @@ function initUtilizationTypeChart() {
       labels: labels,
       datasets: [
         {
-          data: Object.values(utilizationCounts),
-          backgroundColor: ["#27ae60", "#9b59b6"],
+          data: values,
+          backgroundColor: labels.map((label) => {
+            if (label === "Home") return "#27ae60";
+            if (label === "Inside") return "#9b59b6";
+            return "#95a5a6";
+          }),
         },
       ],
     },
@@ -2687,9 +3185,9 @@ function populateResourcesTable() {
         <td>${resource.email || "N/A"}</td>
         <td><strong>${resource.type_of_materials || "N/A"}</strong></td>
         <td>${utilizationBadge}</td>
-        <td>${resource.booked_resources_id || "N/A"}</td>
+        <td>${getResourceDisplayId(resource)}</td>
         <td>${formatDate(resource.date)}</td>
-        <td>${resource.timestamp || "N/A"}</td>
+        <td>${formatDateTime(resource.timestamp)}</td>
       </tr>
     `;
     tbody.innerHTML += row;

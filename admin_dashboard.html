@@ -59,11 +59,31 @@
             <span>User Statistics</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link" data-section="resources">
+        <li class="nav-item nav-item-has-children" id="resources-nav-item">
+          <a
+            href="#"
+            class="nav-link"
+            id="resources-parent-link"
+            data-toggle="resources-submenu"
+          >
             <i class="fas fa-book"></i>
             <span>Resources Statistics</span>
+            <i class="fas fa-chevron-down" style="margin-left: auto"></i>
           </a>
+          <ul class="nav-submenu" id="resources-submenu">
+            <li>
+              <a href="#" class="nav-link nav-sublink" data-section="resources-inside">
+                <i class="fas fa-building"></i>
+                <span>Inside Reading</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-link nav-sublink" data-section="resources-home">
+                <i class="fas fa-home"></i>
+                <span>Take-home Reading</span>
+              </a>
+            </li>
+          </ul>
         </li>
       </ul>
       <button class="logout-btn" onclick="logout()">
@@ -730,13 +750,23 @@
               <div class="stat-value" id="stat-total-resources">0</div>
               <div class="stat-change" id="stat-total-resources-change">All time bookings</div>
             </div>
-            <div class="stat-card green">
+            <div
+              class="stat-card green"
+              id="home-utilization-card"
+              style="cursor: pointer"
+              onclick="openReadingReports('home')"
+            >
               <div class="stat-icon"><i class="fas fa-home"></i></div>
               <div class="stat-label">Home Utilization</div>
               <div class="stat-value" id="stat-home-utilization">0</div>
               <div class="stat-change" id="stat-home-utilization-change">0% of total</div>
             </div>
-            <div class="stat-card purple">
+            <div
+              class="stat-card purple"
+              id="inside-utilization-card"
+              style="cursor: pointer"
+              onclick="openReadingReports('inside')"
+            >
               <div class="stat-icon"><i class="fas fa-building"></i></div>
               <div class="stat-label">Inside Utilization</div>
               <div class="stat-value" id="stat-inside-utilization">0</div>
@@ -759,6 +789,83 @@
               <div class="stat-label">Student Bookings</div>
               <div class="stat-value" id="stat-student-resources">0</div>
               <div class="stat-change" id="stat-student-resources-change">0% of total</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon"><i class="fas fa-book-reader"></i></div>
+              <div class="stat-label">Inside Reading Reports</div>
+              <div class="stat-value" id="stat-inside-reading-reports">0</div>
+              <div class="stat-change" id="stat-inside-reading-reports-change">0% of total</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon"><i class="fas fa-house-user"></i></div>
+              <div class="stat-label">Take Home Reading Reports</div>
+              <div class="stat-value" id="stat-take-home-reading-reports">0</div>
+              <div class="stat-change" id="stat-take-home-reading-reports-change">0% of total</div>
+            </div>
+          </div>
+
+          <div
+            class="table-card"
+            id="resourceReadingReportsPanel"
+            style="display: none"
+          >
+            <div class="table-header">
+              <h3 id="resourceReadingReportsTitle">Reading Reports</h3>
+              <div class="table-actions">
+                <div class="filter-group" style="min-width: 220px">
+                  <label for="readingReportTypeSelect">Reading Type</label>
+                  <select
+                    id="readingReportTypeSelect"
+                    onchange="updateReadingReportDetails()"
+                  >
+                    <option value="inside">Inside Reading</option>
+                    <option value="home">Home Reading</option>
+                  </select>
+                </div>
+                <button class="btn btn-secondary" onclick="closeReadingReportsPanel()">
+                  <i class="fas fa-times"></i> Close
+                </button>
+              </div>
+            </div>
+            <div class="stats-grid" style="margin-bottom: 0">
+              <div class="stat-card purple">
+                <div class="stat-icon"><i class="fas fa-list"></i></div>
+                <div class="stat-label">Total Reports</div>
+                <div class="stat-value" id="reading-report-total">0</div>
+                <div class="stat-change" id="reading-report-percent">0% of total</div>
+              </div>
+              <div class="stat-card teal">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-label">Unique Users</div>
+                <div class="stat-value" id="reading-report-users">0</div>
+                <div class="stat-change">Active readers</div>
+              </div>
+              <div class="stat-card blue">
+                <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                <div class="stat-label">Student Reports</div>
+                <div class="stat-value" id="reading-report-students">0</div>
+                <div class="stat-change" id="reading-report-students-percent">0% of selected</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                <div class="stat-label">Faculty Reports</div>
+                <div class="stat-value" id="reading-report-faculty">0</div>
+                <div class="stat-change" id="reading-report-faculty-percent">0% of selected</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-icon"><i class="fas fa-star"></i></div>
+                <div class="stat-label">Top Material Type</div>
+                <div
+                  class="stat-value"
+                  id="reading-report-top-material"
+                  style="font-size: 18px"
+                >
+                  -
+                </div>
+                <div class="stat-change" id="reading-report-top-material-count">
+                  0 reports
+                </div>
+              </div>
             </div>
           </div>
 
@@ -860,6 +967,226 @@
           </div>
         </div>
         <!-- End Resources Statistics Section -->
+
+        <!-- Inside Reading Page -->
+        <div
+          id="section-resources-inside"
+          class="dashboard-section"
+          style="display: none"
+        >
+          <div class="stats-grid">
+            <div class="stat-card purple">
+              <div class="stat-icon"><i class="fas fa-book-reader"></i></div>
+              <div class="stat-label">Inside Reading Reports</div>
+              <div class="stat-value" id="inside-page-total">0</div>
+              <div class="stat-change" id="inside-page-total-change">0% of all resources</div>
+            </div>
+            <div class="stat-card teal">
+              <div class="stat-icon"><i class="fas fa-users"></i></div>
+              <div class="stat-label">Unique Users</div>
+              <div class="stat-value" id="inside-page-users">0</div>
+              <div class="stat-change">Active readers</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+              <div class="stat-label">Student Reports</div>
+              <div class="stat-value" id="inside-page-students">0</div>
+              <div class="stat-change" id="inside-page-students-change">0% of selected</div>
+            </div>
+            <div class="stat-card orange">
+              <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+              <div class="stat-label">Faculty Reports</div>
+              <div class="stat-value" id="inside-page-faculty">0</div>
+              <div class="stat-change" id="inside-page-faculty-change">0% of selected</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon"><i class="fas fa-star"></i></div>
+              <div class="stat-label">Top Material Type</div>
+              <div class="stat-value" id="inside-page-top-material" style="font-size: 18px">-</div>
+              <div class="stat-change" id="inside-page-top-material-change">0 reports</div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Inside Reading Trend</h3>
+                <p>Daily inside reading activity</p>
+              </div>
+              <div class="chart-container">
+                <canvas id="insideTrendChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Inside Material Types</h3>
+                <p>Most used materials (bar view)</p>
+              </div>
+              <div class="chart-container">
+                <canvas id="insideMaterialBarChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Inside Booker Type Distribution</h3>
+                <p>Student vs Faculty</p>
+              </div>
+              <div class="chart-container">
+                <canvas id="insideBookerChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-header">
+              <h3>Inside Reading Records</h3>
+              <div class="table-actions">
+                <div class="search-box">
+                  <input
+                    type="text"
+                    id="insideSearchResourcesInput"
+                    placeholder="Search inside reading..."
+                    onkeyup="searchReadingResources('inside')"
+                  />
+                  <i class="fas fa-search"></i>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Booker Name</th>
+                    <th>Booker Type</th>
+                    <th>Email</th>
+                    <th>Material Type</th>
+                    <th>Utilization</th>
+                    <th>Resource ID</th>
+                    <th>Date</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="insideResourcesTableBody">
+                  <!-- Data will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Take-home Reading Page -->
+        <div
+          id="section-resources-home"
+          class="dashboard-section"
+          style="display: none"
+        >
+          <div class="stats-grid">
+            <div class="stat-card green">
+              <div class="stat-icon"><i class="fas fa-house-user"></i></div>
+              <div class="stat-label">Take-home Reading Reports</div>
+              <div class="stat-value" id="home-page-total">0</div>
+              <div class="stat-change" id="home-page-total-change">0% of all resources</div>
+            </div>
+            <div class="stat-card teal">
+              <div class="stat-icon"><i class="fas fa-users"></i></div>
+              <div class="stat-label">Unique Users</div>
+              <div class="stat-value" id="home-page-users">0</div>
+              <div class="stat-change">Active readers</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+              <div class="stat-label">Student Reports</div>
+              <div class="stat-value" id="home-page-students">0</div>
+              <div class="stat-change" id="home-page-students-change">0% of selected</div>
+            </div>
+            <div class="stat-card orange">
+              <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+              <div class="stat-label">Faculty Reports</div>
+              <div class="stat-value" id="home-page-faculty">0</div>
+              <div class="stat-change" id="home-page-faculty-change">0% of selected</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-icon"><i class="fas fa-star"></i></div>
+              <div class="stat-label">Top Material Type</div>
+              <div class="stat-value" id="home-page-top-material" style="font-size: 18px">-</div>
+              <div class="stat-change" id="home-page-top-material-change">0 reports</div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Take-home Reading Trend</h3>
+                <p>Daily take-home reading activity</p>
+              </div>
+              <div class="chart-container">
+                <canvas id="homeTrendChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Take-home Material Types</h3>
+                <p>Most used materials (bar view)</p>
+              </div>
+              <div class="chart-container">
+                <canvas id="homeMaterialBarChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Take-home Booker Type Distribution</h3>
+                <p>Student vs Faculty</p>
+              </div>
+              <div class="chart-container">
+                <canvas id="homeBookerChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-header">
+              <h3>Take-home Reading Records</h3>
+              <div class="table-actions">
+                <div class="search-box">
+                  <input
+                    type="text"
+                    id="homeSearchResourcesInput"
+                    placeholder="Search take-home reading..."
+                    onkeyup="searchReadingResources('home')"
+                  />
+                  <i class="fas fa-search"></i>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Booker Name</th>
+                    <th>Booker Type</th>
+                    <th>Email</th>
+                    <th>Material Type</th>
+                    <th>Utilization</th>
+                    <th>Resource ID</th>
+                    <th>Date</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="homeResourcesTableBody">
+                  <!-- Data will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
     </main>
 
     <script src="resources/js/dashboard_script.js"></script>
